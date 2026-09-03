@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as RapportsRouteImport } from './routes/rapports'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as MModuleRouteImport } from './routes/m.$module'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RapportsRoute = RapportsRouteImport.update({
+  id: '/rapports',
+  path: '/rapports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TableauDeBordRoute = TableauDeBordRouteImport.update({
@@ -38,12 +44,14 @@ const MModuleRoute = MModuleRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/rapports': typeof RapportsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/rapports': typeof RapportsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
@@ -51,20 +59,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/rapports': typeof RapportsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/tableau-de-bord' | '/m/$module'
+  fullPaths: '/' | '/auth' | '/rapports' | '/tableau-de-bord' | '/m/$module'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/tableau-de-bord' | '/m/$module'
-  id: '__root__' | '/' | '/auth' | '/tableau-de-bord' | '/m/$module'
+  to: '/' | '/auth' | '/rapports' | '/tableau-de-bord' | '/m/$module'
+  id:
+    '__root__' | '/' | '/auth' | '/rapports' | '/tableau-de-bord' | '/m/$module'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  RapportsRoute: typeof RapportsRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   MModuleRoute: typeof MModuleRoute
 }
@@ -83,6 +94,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rapports': {
+      id: '/rapports'
+      path: '/rapports'
+      fullPath: '/rapports'
+      preLoaderRoute: typeof RapportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tableau-de-bord': {
@@ -105,6 +123,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  RapportsRoute: RapportsRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   MModuleRoute: MModuleRoute,
 }
