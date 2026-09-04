@@ -127,14 +127,21 @@ function GuidePage() {
           </Section>
 
           <Section title="5. Hiérarchie communautaire">
-            <pre className="rounded-md bg-muted/60 p-3 text-xs text-foreground">{`Fédération
-   ├── Union
-   ├── Coopérative
-   └── Association
-            └── Membres`}</pre>
+            <pre className="rounded-md bg-muted/60 p-3 text-xs text-foreground">{`Fédération      (Province)
+   └── Union        (Commune de la province)
+        └── Coopérative   (Zone de la commune)
+             └── Association   (Colline de la zone)
+                  └── Membres`}</pre>
             <p>
-              Ordre de saisie conseillé : Fédération → Union / Coopérative / Association → Membres.
-              Les Intervenants sont rattachés à une province.
+              L'ordre de saisie est obligatoire : l'administration crée la fédération, la fédération
+              crée ses unions, une union crée ses coopératives, une coopérative crée ses
+              associations, et l'association enregistre ses membres.
+            </p>
+            <p>
+              Chaque niveau hérite de la localisation du niveau supérieur : les communes proposées
+              sont celles de la province de la fédération, les zones celles de la commune de
+              l'union, les collines celles de la zone de la coopérative. Les Intervenants sont
+              rattachés à une province.
             </p>
           </Section>
 

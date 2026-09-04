@@ -39,6 +39,22 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   const remove = useDeleteRow(mod.slug);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Row | null>(null);
+  const [form, setForm] = useState<Row>({});
+
+  function openForm(row: Row) {
+    const next: Row = { ...row };
+    // Valeurs par défaut pour une nouvelle fiche (évite les champs obligatoires vides).
+    for (const f of mod.fields) {
+      if (next[f.name] !== undefined && next[f.name] !== null) continue;
+      if (f.type === "select" && f.options?.length) next[f.name] = f.options[0];
+      else if (f.type === "number") next[f.name] = 0;
+    }
+    setEditing(row);
+    setForm(next);
+  }
+  function setField(name: string, value: unknown) {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
 
   const refModules = useMemo(
     () => [...new Set(mod.fields.filter((f) => f.refModule).map((f) => f.refModule!))],
@@ -79,14 +95,30 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, query, refA.data, refB.data, refC.data, refD.data]);
 
+  function optionsFor(f: Field): Row[] {
+    if (!f.refModule) return [];
+    const all = refData[f.refModule] ?? [];
+    if (!f.filterBy) return all;
+    const parentField = mod.fields.find((x) => x.name === f.filterBy!.field);
+    const parentId = form[f.filterBy.field];
+    if (!parentField?.refModule || !parentId) return [];
+    const parent = (refData[parentField.refModule] ?? []).find((r) => r["id"] === parentId);
+    const inherited = parent?.[f.filterBy.via];
+    if (!inherited) return [];
+    return all.filter((o) => o[f.filterBy!.via] === inherited);
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
     const values: Row = {};
     for (const f of mod.fields) {
-      const v = form.get(f.name);
-      const s = typeof v === "string" ? v.trim() : "";
+      const raw = form[f.name];
+      const s = typeof raw === "string" ? raw.trim() : raw == null ? "" : String(raw);
       values[f.name] = f.type === "number" ? (s === "" ? 0 : Number(s)) : s === "" ? null : s;
+      if (f.required && (values[f.name] === null || values[f.name] === "")) {
+        toast.error(`Le champ « ${f.label} » est obligatoire.`);
+        return;
+      }
     }
     if (editing?.["id"]) values["id"] = editing["id"];
     try {
@@ -105,7 +137,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
           <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
         </div>
-        <Button onClick={() => setEditing({})}>
+        <Button onClick={() => openForm({})}>
           <Plus className="mr-2 size-4" />
           Nouveau
         </Button>
@@ -166,7 +198,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                       </TableCell>
                     ))}
                     <TableCell className="text-right whitespace-nowrap">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(row)}>
+                      <Button variant="ghost" size="icon" onClick={() => openForm(row)}>
                         <Pencil className="size-4" />
                       </Button>
                       <Button
@@ -207,10 +239,22 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
             {mod.fields.map((f) => (
               <FieldInput
-                key={`${editing?.["id"] ?? "new"}-${f.name}`}
+                key={f.name}
                 field={f}
-                defaultValue={editing?.[f.name] ?? ""}
-                options={f.refModule ? (refData[f.refModule] ?? []) : []}
+                value={form[f.name] ?? ""}
+                onChange={(v) => {
+                  setField(f.name, v);
+                  // Un changement d'entité mère réinitialise les champs hérités.
+                  mod.fields
+                    .filter((c) => c.filterBy?.field === f.name)
+                    .forEach((c) => setField(c.name, ""));
+                }}
+                options={optionsFor(f)}
+                hint={
+                  f.filterBy && !form[f.filterBy.field]
+                    ? `Sélectionnez d'abord « ${mod.fields.find((x) => x.name === f.filterBy!.field)?.label ?? ""} ».`
+                    : undefined
+                }
               />
             ))}
             <DialogFooter className="sm:col-span-2">
@@ -230,14 +274,18 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
 
 function FieldInput({
   field,
-  defaultValue,
+  value: rawValue,
+  onChange,
   options,
+  hint,
 }: {
   field: Field;
-  defaultValue: unknown;
+  value: unknown;
+  onChange: (value: string) => void;
   options: Row[];
+  hint?: string | undefined;
 }) {
-  const value = defaultValue === null ? "" : String(defaultValue);
+  const value = rawValue === null || rawValue === undefined ? "" : String(rawValue);
   const wide = field.type === "textarea";
 
   return (
@@ -247,13 +295,25 @@ function FieldInput({
         {field.required ? " *" : ""}
       </Label>
       {field.type === "textarea" ? (
-        <Textarea id={field.name} name={field.name} defaultValue={value} rows={3} />
+        <Textarea
+          id={field.name}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+        />
       ) : field.type === "select" ? (
-        <SelectField field={field} value={value} items={field.options ?? []} />
+        <SelectField
+          field={field}
+          value={value}
+          onChange={onChange}
+          items={(field.options ?? []).map((o) => ({ value: o, label: o }))}
+        />
       ) : field.refModule ? (
         <SelectField
           field={field}
           value={value}
+          onChange={onChange}
+          disabled={Boolean(hint)}
           items={options.map((o) => ({
             value: String(o["id"]),
             label: rowLabel(MODULE_MAP[field.refModule!]!, o),
@@ -262,13 +322,13 @@ function FieldInput({
       ) : (
         <Input
           id={field.name}
-          name={field.name}
           type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
           step={field.type === "number" ? "any" : undefined}
-          required={field.required ?? false}
-          defaultValue={value}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
         />
       )}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -276,29 +336,34 @@ function FieldInput({
 function SelectField({
   field,
   value,
+  onChange,
   items,
+  disabled,
 }: {
   field: Field;
   value: string;
-  items: (string | { value: string; label: string })[];
+  onChange: (value: string) => void;
+  items: { value: string; label: string }[];
+  disabled?: boolean | undefined;
 }) {
-  const [current, setCurrent] = useState(value);
-  const normalized = items.map((i) => (typeof i === "string" ? { value: i, label: i } : i));
   return (
-    <>
-      <input type="hidden" name={field.name} value={current} />
-      <Select value={current} onValueChange={setCurrent}>
-        <SelectTrigger id={field.name}>
-          <SelectValue placeholder="Sélectionner…" />
-        </SelectTrigger>
-        <SelectContent>
-          {normalized.map((o) => (
+    <Select value={value} onValueChange={onChange} disabled={disabled ?? false}>
+      <SelectTrigger id={field.name}>
+        <SelectValue placeholder={disabled ? "Indisponible" : "Sélectionner…"} />
+      </SelectTrigger>
+      <SelectContent>
+        {items.length === 0 ? (
+          <SelectItem value="__vide" disabled>
+            Aucune option
+          </SelectItem>
+        ) : (
+          items.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
             </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
+          ))
+        )}
+      </SelectContent>
+    </Select>
   );
 }

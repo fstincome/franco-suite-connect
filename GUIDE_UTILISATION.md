@@ -62,14 +62,18 @@ créez d'abord l'élément parent si vous ne le trouvez pas.
 L'organisation suit l'ordre suivant :
 
 ```text
-Fédération
-   ├── Union
-   ├── Coopérative
-   └── Association
-            └── Membres
+Fédération  (Province)
+   └── Union  (Commune de la province)
+          └── Coopérative  (Zone de la commune)
+                 └── Association  (Colline de la zone)
+                        └── Membres
 ```
 
-Ordre de saisie conseillé : Fédération → Union / Coopérative / Association → Membres.
+La saisie suit obligatoirement cet ordre : l'administration crée la Fédération, la Fédération
+crée ses Unions, une Union crée ses Coopératives, une Coopérative crée ses Associations, et
+l'Association enregistre ses Membres. Chaque niveau hérite de la localisation de son niveau
+supérieur : les communes proposées sont celles de la province de la fédération, les zones celles
+de la commune de l'union, les collines celles de la zone de la coopérative.
 Les **Intervenants** sont rattachés à une province.
 
 ## 6. Localisation

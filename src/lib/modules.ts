@@ -11,6 +11,9 @@ export type Field = {
   options?: string[];
   refModule?: string;
   suffix?: string;
+  /** Filtre les options par héritage : l'option doit partager la valeur `via`
+   * de l'enregistrement sélectionné dans le champ `field`. */
+  filterBy?: { field: string; via: string };
 };
 
 export type ModuleDef = {
@@ -317,19 +320,23 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "federations",
     table: "federations",
-    title: "Fédérations",
+    title: "1. Fédérations",
     singular: "Fédération",
-    description: "Fédérations provinciales regroupant unions, coopératives et associations.",
+    description: "Niveau 1 : une fédération par province. Créée par l'administration.",
     group: "Communauté",
     labelField: "nom",
     fields: [
       { name: "nom", label: "Nom", type: "text", list: true, required: true },
-      { name: "province_id", label: "Province", type: "ref", refModule: "provinces", list: true },
+      {
+        name: "province_id",
+        label: "Province",
+        type: "ref",
+        refModule: "provinces",
+        list: true,
+        required: true,
+      },
       { name: "responsable_id", label: "Responsable", type: "ref", refModule: "employes" },
       { name: "contact", label: "Contact", type: "text", list: true },
-      { name: "nbre_unions", label: "Unions", type: "number", list: true },
-      { name: "nbre_cooperatives", label: "Coopératives", type: "number", list: true },
-      { name: "nbre_associations", label: "Associations", type: "number", list: true },
       { name: "date_creation", label: "Date de création", type: "date", list: true },
       STATUT(["Actif", "Inactif"]),
     ],
@@ -337,9 +344,10 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "unions",
     table: "unions",
-    title: "Unions",
+    title: "2. Unions",
     singular: "Union",
-    description: "Unions rattachées à une fédération et localisées sur une colline.",
+    description:
+      "Niveau 2 : une union est créée par sa fédération et se situe dans une commune de la province de cette fédération.",
     group: "Communauté",
     labelField: "nom",
     fields: [
@@ -350,11 +358,18 @@ export const MODULES: ModuleDef[] = [
         type: "ref",
         refModule: "federations",
         list: true,
+        required: true,
       },
-      { name: "colline_id", label: "Colline", type: "ref", refModule: "collines", list: true },
+      {
+        name: "commune_id",
+        label: "Commune",
+        type: "ref",
+        refModule: "communes",
+        list: true,
+        filterBy: { field: "federation_id", via: "province_id" },
+      },
       { name: "responsable_id", label: "Responsable", type: "ref", refModule: "employes" },
       { name: "contact", label: "Contact", type: "text", list: true },
-      { name: "nbre_membres", label: "Membres", type: "number", list: true },
       { name: "date_creation", label: "Date de création", type: "date", list: true },
       STATUT(["Actif", "Inactif"]),
     ],
@@ -362,24 +377,32 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "cooperatives",
     table: "cooperatives",
-    title: "Coopératives",
+    title: "3. Coopératives",
     singular: "Coopérative",
-    description: "Coopératives rattachées à une fédération et localisées sur une colline.",
+    description:
+      "Niveau 3 : une coopérative est créée par son union et se situe dans une zone de la commune de cette union.",
     group: "Communauté",
     labelField: "nom",
     fields: [
       { name: "nom", label: "Nom", type: "text", list: true, required: true },
       {
-        name: "federation_id",
-        label: "Fédération",
+        name: "union_id",
+        label: "Union",
         type: "ref",
-        refModule: "federations",
+        refModule: "unions",
         list: true,
+        required: true,
       },
-      { name: "colline_id", label: "Colline", type: "ref", refModule: "collines", list: true },
+      {
+        name: "zone_id",
+        label: "Zone",
+        type: "ref",
+        refModule: "zones",
+        list: true,
+        filterBy: { field: "union_id", via: "commune_id" },
+      },
       { name: "responsable_id", label: "Responsable", type: "ref", refModule: "employes" },
       { name: "contact", label: "Contact", type: "text", list: true },
-      { name: "nbre_membres", label: "Membres", type: "number", list: true },
       { name: "date_creation", label: "Date de création", type: "date", list: true },
       STATUT(["Actif", "Inactif"]),
     ],
@@ -387,24 +410,32 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "associations",
     table: "associations",
-    title: "Associations",
+    title: "4. Associations",
     singular: "Association",
-    description: "Associations rattachées à une fédération et localisées sur une colline.",
+    description:
+      "Niveau 4 : une association est créée par sa coopérative et se situe sur une colline de la zone de cette coopérative.",
     group: "Communauté",
     labelField: "nom",
     fields: [
       { name: "nom", label: "Nom", type: "text", list: true, required: true },
       {
-        name: "federation_id",
-        label: "Fédération",
+        name: "cooperative_id",
+        label: "Coopérative",
         type: "ref",
-        refModule: "federations",
+        refModule: "cooperatives",
         list: true,
+        required: true,
       },
-      { name: "colline_id", label: "Colline", type: "ref", refModule: "collines", list: true },
+      {
+        name: "colline_id",
+        label: "Colline",
+        type: "ref",
+        refModule: "collines",
+        list: true,
+        filterBy: { field: "cooperative_id", via: "zone_id" },
+      },
       { name: "responsable_id", label: "Responsable", type: "ref", refModule: "employes" },
       { name: "contact", label: "Contact", type: "text", list: true },
-      { name: "nbre_membres", label: "Membres", type: "number", list: true },
       { name: "date_creation", label: "Date de création", type: "date", list: true },
       STATUT(["Actif", "Inactif"]),
     ],
@@ -412,15 +443,23 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "membres",
     table: "membres",
-    title: "Membres",
+    title: "5. Membres",
     singular: "Membre",
-    description: "Membres affiliés aux associations, coopératives et unions.",
+    description: "Niveau 5 : les membres sont créés par leur association et en héritent la colline.",
     group: "Communauté",
     labelField: "nom",
     labelField2: "prenom",
     fields: [
       { name: "nom", label: "Nom", type: "text", list: true, required: true },
       { name: "prenom", label: "Prénom", type: "text", list: true },
+      {
+        name: "association_id",
+        label: "Association",
+        type: "ref",
+        refModule: "associations",
+        list: true,
+        required: true,
+      },
       {
         name: "sexe",
         label: "Sexe",
@@ -429,21 +468,6 @@ export const MODULES: ModuleDef[] = [
         options: ["Masculin", "Féminin"],
       },
       { name: "contact", label: "Contact", type: "text", list: true },
-      {
-        name: "association_id",
-        label: "Association",
-        type: "ref",
-        refModule: "associations",
-        list: true,
-      },
-      {
-        name: "cooperative_id",
-        label: "Coopérative",
-        type: "ref",
-        refModule: "cooperatives",
-        list: true,
-      },
-      { name: "union_id", label: "Union", type: "ref", refModule: "unions", list: true },
       { name: "superficie", label: "Superficie", type: "text" },
       { name: "nbre_plants", label: "Nombre de plants", type: "text" },
       { name: "date_naissance", label: "Date de naissance", type: "date" },
