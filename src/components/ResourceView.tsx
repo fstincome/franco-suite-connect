@@ -77,7 +77,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
       }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, query, refA.data, refB.data]);
+  }, [rows, query, refA.data, refB.data, refC.data, refD.data]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
