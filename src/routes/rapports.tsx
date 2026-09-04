@@ -44,7 +44,7 @@ function Rapports() {
         supabase.from("budgets").select("intitule, exercice, montant_prevu, montant_realise"),
         supabase.from("employes").select("service, statut, salaire_base"),
         supabase.from("carburant").select("litres, prix_total"),
-        supabase.from("membres").select("cotisation, sexe"),
+        supabase.from("membres").select("sexe"),
         supabase.from("projets").select("titre, budget, avancement, statut"),
       ]);
       return {
@@ -71,7 +71,6 @@ function Rapports() {
 
   const litres = (data?.carburant ?? []).reduce((s, c) => s + Number(c.litres ?? 0), 0);
   const coutCarburant = (data?.carburant ?? []).reduce((s, c) => s + Number(c.prix_total ?? 0), 0);
-  const cotisations = (data?.membres ?? []).reduce((s, m) => s + Number(m.cotisation ?? 0), 0);
   const femmes = (data?.membres ?? []).filter((m) => m.sexe === "F").length;
 
   return (
@@ -98,7 +97,6 @@ function Rapports() {
           <Stat label="Carburant consommé" value={`${formatNumber(litres)} L`} />
           <Stat label="Coût carburant" value={formatMoney(coutCarburant)} />
           <Stat label="Membres — femmes" value={`${femmes}/${(data?.membres ?? []).length}`} />
-          <Stat label="Cotisations collectées" value={formatMoney(cotisations)} />
           <Stat
             label="Projets en cours"
             value={String((data?.projets ?? []).filter((p) => p.statut === "En cours").length)}
