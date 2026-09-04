@@ -28,6 +28,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SideLink to="/rapports" icon={BarChart3} onNavigate={() => setOpen(false)}>
           Rapports
         </SideLink>
+        <SideLink to="/guide" icon={BookOpen} onNavigate={() => setOpen(false)}>
+          Guide d'utilisation
+        </SideLink>
       </div>
       {GROUPS.map((group) => (
         <div key={group}>
