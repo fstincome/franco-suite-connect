@@ -28,3 +28,9 @@ unique permettant de préserver les anciennes clés et relations.
 ## À venir
 - [ ] Import des données réelles dès réception d'un dump/export exploitable
 - [ ] Gestion des utilisateurs et rôles depuis l'interface (admin)
+
+## Nouvelle demande (04/09/2026)
+- [ ] Clarifier le module Communauté selon la hiérarchie des contrôleurs legacy :
+      Fédérations → Unions / Coopératives / Associations → Membres, + Intervenants,
+      avec localisation Province → Commune → Zone → Colline.
+- [ ] Importer les données réelles du dump `cnacbgthrks_gestion.sql` (dump reçu).
