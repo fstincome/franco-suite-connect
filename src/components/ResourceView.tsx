@@ -42,8 +42,15 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   const [form, setForm] = useState<Row>({});
 
   function openForm(row: Row) {
+    const next: Row = { ...row };
+    // Valeurs par défaut pour une nouvelle fiche (évite les champs obligatoires vides).
+    for (const f of mod.fields) {
+      if (next[f.name] !== undefined && next[f.name] !== null) continue;
+      if (f.type === "select" && f.options?.length) next[f.name] = f.options[0];
+      else if (f.type === "number") next[f.name] = 0;
+    }
     setEditing(row);
-    setForm({ ...row });
+    setForm(next);
   }
   function setField(name: string, value: unknown) {
     setForm((prev) => ({ ...prev, [name]: value }));
