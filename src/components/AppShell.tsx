@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
+import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GROUPS, ORG_NAME, modulesOfGroup } from "@/lib/modules";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SideLink>
         <SideLink to="/rapports" icon={BarChart3} onNavigate={() => setOpen(false)}>
           Rapports
+        </SideLink>
+        <SideLink to="/guide" icon={BookOpen} onNavigate={() => setOpen(false)}>
+          Guide d'utilisation
         </SideLink>
       </div>
       {GROUPS.map((group) => (
