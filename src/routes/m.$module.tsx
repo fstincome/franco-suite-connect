@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ResourceView } from "@/components/ResourceView";
 import { MODULE_MAP, ORG_NAME } from "@/lib/modules";
+import { useMyAccess } from "@/lib/access";
+
 
 export const Route = createFileRoute("/m/$module")({
   ssr: false,
@@ -31,10 +33,29 @@ export const Route = createFileRoute("/m/$module")({
 function ModulePage() {
   const { module: slug } = Route.useParams();
   const mod = MODULE_MAP[slug];
+  const { slugs, isLoading } = useMyAccess();
   if (!mod) return null;
+  if (!isLoading && !slugs.has(slug)) {
+    return (
+      <AppShell>
+        <div className="rounded-lg border p-6">
+          <h1 className="text-lg font-semibold">Rubrique non accessible</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Vous n'avez pas l'autorisation de consulter « {mod.title} ». Demandez cet accès à
+            l'administrateur du système.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
   return (
     <AppShell>
-      <ResourceView mod={mod} />
+      {isLoading ? (
+        <p className="text-muted-foreground text-sm">Chargement…</p>
+      ) : (
+        <ResourceView mod={mod} />
+      )}
     </AppShell>
   );
 }
+

@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
+import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GROUPS, ORG_NAME, modulesOfGroup } from "@/lib/modules";
+import { useMyAccess } from "@/lib/access";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isAdmin, slugs } = useMyAccess();
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -31,30 +33,40 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SideLink to="/guide" icon={BookOpen} onNavigate={() => setOpen(false)}>
           Guide d'utilisation
         </SideLink>
+        {isAdmin ? (
+          <SideLink to="/parametres" icon={Settings} onNavigate={() => setOpen(false)}>
+            Paramètres d'accès
+          </SideLink>
+        ) : null}
       </div>
-      {GROUPS.map((group) => (
-        <div key={group}>
-          <p className="px-3 pb-1 text-[11px] font-semibold tracking-widest text-sidebar-foreground/50 uppercase">
-            {group}
-          </p>
-          <div className="space-y-0.5">
-            {modulesOfGroup(group).map((m) => (
-              <Link
-                key={m.slug}
-                to="/m/$module"
-                params={{ module: m.slug }}
-                onClick={() => setOpen(false)}
-                className="block rounded-md px-3 py-1.5 text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium" }}
-              >
-                {m.title}
-              </Link>
-            ))}
+      {GROUPS.map((group) => {
+        const mods = modulesOfGroup(group).filter((m) => slugs.has(m.slug));
+        if (!mods.length) return null;
+        return (
+          <div key={group}>
+            <p className="px-3 pb-1 text-[11px] font-semibold tracking-widest text-sidebar-foreground/50 uppercase">
+              {group}
+            </p>
+            <div className="space-y-0.5">
+              {mods.map((m) => (
+                <Link
+                  key={m.slug}
+                  to="/m/$module"
+                  params={{ module: m.slug }}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md px-3 py-1.5 text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium" }}
+                >
+                  {m.title}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </nav>
   );
+
 
   return (
     <div className="min-h-screen bg-background">
