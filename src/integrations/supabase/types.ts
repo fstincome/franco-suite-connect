@@ -153,48 +153,70 @@ export type Database = {
       }
       associations: {
         Row: {
+          colline_id: string | null
+          contact: string | null
           created_at: string
           date_creation: string | null
+          federation_id: string | null
           id: string
-          legacy_id: string | null
-          localite: string | null
+          legacy_id: number | null
+          nbre_membres: number
           nom: string
-          province: string | null
-          responsable: string | null
+          responsable_id: string | null
           statut: string
-          telephone: string | null
-          type_organisation: string
           updated_at: string
         }
         Insert: {
+          colline_id?: string | null
+          contact?: string | null
           created_at?: string
           date_creation?: string | null
+          federation_id?: string | null
           id?: string
-          legacy_id?: string | null
-          localite?: string | null
+          legacy_id?: number | null
+          nbre_membres?: number
           nom: string
-          province?: string | null
-          responsable?: string | null
+          responsable_id?: string | null
           statut?: string
-          telephone?: string | null
-          type_organisation?: string
           updated_at?: string
         }
         Update: {
+          colline_id?: string | null
+          contact?: string | null
           created_at?: string
           date_creation?: string | null
+          federation_id?: string | null
           id?: string
-          legacy_id?: string | null
-          localite?: string | null
+          legacy_id?: number | null
+          nbre_membres?: number
           nom?: string
-          province?: string | null
-          responsable?: string | null
+          responsable_id?: string | null
           statut?: string
-          telephone?: string | null
-          type_organisation?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "associations_colline_id_fkey"
+            columns: ["colline_id"]
+            isOneToOne: false
+            referencedRelation: "collines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associations_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associations_responsable_id_fkey"
+            columns: ["responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       budgets: {
         Row: {
@@ -330,6 +352,76 @@ export type Database = {
         }
         Relationships: []
       }
+      collines: {
+        Row: {
+          created_at: string
+          id: string
+          legacy_id: number | null
+          nom: string
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom?: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collines_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communes: {
+        Row: {
+          created_at: string
+          id: string
+          legacy_id: number | null
+          nom: string
+          province_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom: string
+          province_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom?: string
+          province_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communes_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conges: {
         Row: {
           created_at: string
@@ -374,6 +466,73 @@ export type Database = {
           {
             foreignKeyName: "conges_employe_id_fkey"
             columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cooperatives: {
+        Row: {
+          colline_id: string | null
+          contact: string | null
+          created_at: string
+          date_creation: string | null
+          federation_id: string | null
+          id: string
+          legacy_id: number | null
+          nbre_membres: number
+          nom: string
+          responsable_id: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          colline_id?: string | null
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          federation_id?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_membres?: number
+          nom: string
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          colline_id?: string | null
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          federation_id?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_membres?: number
+          nom?: string
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperatives_colline_id_fkey"
+            columns: ["colline_id"]
+            isOneToOne: false
+            referencedRelation: "collines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cooperatives_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cooperatives_responsable_id_fkey"
+            columns: ["responsable_id"]
             isOneToOne: false
             referencedRelation: "employes"
             referencedColumns: ["id"]
@@ -487,6 +646,69 @@ export type Database = {
           },
         ]
       }
+      federations: {
+        Row: {
+          contact: string | null
+          created_at: string
+          date_creation: string | null
+          id: string
+          legacy_id: number | null
+          nbre_associations: number
+          nbre_cooperatives: number
+          nbre_unions: number
+          nom: string
+          province_id: string | null
+          responsable_id: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_associations?: number
+          nbre_cooperatives?: number
+          nbre_unions?: number
+          nom: string
+          province_id?: string | null
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_associations?: number
+          nbre_cooperatives?: number
+          nbre_unions?: number
+          nom?: string
+          province_id?: string | null
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "federations_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "federations_responsable_id_fkey"
+            columns: ["responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fournisseurs: {
         Row: {
           adresse: string | null
@@ -529,50 +751,113 @@ export type Database = {
         }
         Relationships: []
       }
+      intervenants: {
+        Row: {
+          contact: string | null
+          created_at: string
+          date_creation: string | null
+          id: string
+          legacy_id: number | null
+          nom: string
+          province_id: string | null
+          responsable_id: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          id?: string
+          legacy_id?: number | null
+          nom: string
+          province_id?: string | null
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          id?: string
+          legacy_id?: number | null
+          nom?: string
+          province_id?: string | null
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intervenants_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intervenants_responsable_id_fkey"
+            columns: ["responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membres: {
         Row: {
           association_id: string | null
-          cotisation: number
+          contact: string | null
+          cooperative_id: string | null
           created_at: string
           date_adhesion: string | null
+          date_naissance: string | null
           id: string
-          legacy_id: string | null
-          localite: string | null
+          legacy_id: number | null
+          nbre_plants: string | null
           nom: string
           prenom: string | null
           sexe: string | null
           statut: string
-          telephone: string | null
+          superficie: string | null
+          union_id: string | null
           updated_at: string
         }
         Insert: {
           association_id?: string | null
-          cotisation?: number
+          contact?: string | null
+          cooperative_id?: string | null
           created_at?: string
           date_adhesion?: string | null
+          date_naissance?: string | null
           id?: string
-          legacy_id?: string | null
-          localite?: string | null
+          legacy_id?: number | null
+          nbre_plants?: string | null
           nom: string
           prenom?: string | null
           sexe?: string | null
           statut?: string
-          telephone?: string | null
+          superficie?: string | null
+          union_id?: string | null
           updated_at?: string
         }
         Update: {
           association_id?: string | null
-          cotisation?: number
+          contact?: string | null
+          cooperative_id?: string | null
           created_at?: string
           date_adhesion?: string | null
+          date_naissance?: string | null
           id?: string
-          legacy_id?: string | null
-          localite?: string | null
+          legacy_id?: number | null
+          nbre_plants?: string | null
           nom?: string
           prenom?: string | null
           sexe?: string | null
           statut?: string
-          telephone?: string | null
+          superficie?: string | null
+          union_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -581,6 +866,20 @@ export type Database = {
             columns: ["association_id"]
             isOneToOne: false
             referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membres_cooperative_id_fkey"
+            columns: ["cooperative_id"]
+            isOneToOne: false
+            referencedRelation: "cooperatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membres_union_id_fkey"
+            columns: ["union_id"]
+            isOneToOne: false
+            referencedRelation: "unions"
             referencedColumns: ["id"]
           },
         ]
@@ -901,6 +1200,30 @@ export type Database = {
           },
         ]
       }
+      provinces: {
+        Row: {
+          created_at: string
+          id: string
+          legacy_id: number | null
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       salaires: {
         Row: {
           brut: number
@@ -998,6 +1321,73 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      unions: {
+        Row: {
+          colline_id: string | null
+          contact: string | null
+          created_at: string
+          date_creation: string | null
+          federation_id: string | null
+          id: string
+          legacy_id: number | null
+          nbre_membres: number
+          nom: string
+          responsable_id: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          colline_id?: string | null
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          federation_id?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_membres?: number
+          nom: string
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          colline_id?: string | null
+          contact?: string | null
+          created_at?: string
+          date_creation?: string | null
+          federation_id?: string | null
+          id?: string
+          legacy_id?: number | null
+          nbre_membres?: number
+          nom?: string
+          responsable_id?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unions_colline_id_fkey"
+            columns: ["colline_id"]
+            isOneToOne: false
+            referencedRelation: "collines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unions_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unions_responsable_id_fkey"
+            columns: ["responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1111,6 +1501,41 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zones: {
+        Row: {
+          commune_id: string | null
+          created_at: string
+          id: string
+          legacy_id: number | null
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          commune_id?: string | null
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          commune_id?: string | null
+          created_at?: string
+          id?: string
+          legacy_id?: number | null
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zones_commune_id_fkey"
+            columns: ["commune_id"]
+            isOneToOne: false
+            referencedRelation: "communes"
             referencedColumns: ["id"]
           },
         ]
