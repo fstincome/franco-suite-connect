@@ -673,6 +673,7 @@ export const MODULE_MAP: Record<string, ModuleDef> = Object.fromEntries(
 export const GROUPS = [
   "Administration / RH",
   "Communauté",
+  "Localisation",
   "Données commerciales",
   "Stock",
   "Charroi",

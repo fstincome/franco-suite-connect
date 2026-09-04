@@ -15,7 +15,7 @@ export function useRows(slug: string, enabled = true) {
         .from(mod!.table as never)
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .limit(5000);
       if (error) throw error;
       return (data ?? []) as Row[];
     },
