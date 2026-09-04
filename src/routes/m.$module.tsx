@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ResourceView } from "@/components/ResourceView";
 import { MODULE_MAP, ORG_NAME } from "@/lib/modules";
+import { useMyAccess } from "@/lib/access";
+
 
 export const Route = createFileRoute("/m/$module")({
   ssr: false,
