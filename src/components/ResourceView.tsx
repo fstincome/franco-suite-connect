@@ -47,9 +47,14 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
 
   const refA = useRows(refModules[0] ?? "clients", !!refModules[0]);
   const refB = useRows(refModules[1] ?? "clients", !!refModules[1]);
+  const refC = useRows(refModules[2] ?? "clients", !!refModules[2]);
+  const refD = useRows(refModules[3] ?? "clients", !!refModules[3]);
   const refData: Record<string, Row[]> = {};
-  if (refModules[0]) refData[refModules[0]] = refA.data ?? [];
-  if (refModules[1]) refData[refModules[1]] = refB.data ?? [];
+  const refQueries = [refA, refB, refC, refD];
+  refModules.forEach((slug, i) => {
+    refData[slug] = refQueries[i]?.data ?? [];
+  });
+
 
   const refLabel = (slug: string, id: string | null) => {
     if (!id) return "—";
@@ -72,7 +77,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
       }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, query, refA.data, refB.data]);
+  }, [rows, query, refA.data, refB.data, refC.data, refD.data]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

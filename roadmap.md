@@ -9,7 +9,7 @@ L'archive `application.zip` (et les archives imbriquées `administration.zip`, `
 `projets.zip`) ne contient **que du code PHP** : aucun fichier `.sql`, dump MySQL, `.csv`, `.json`
 ou export tableur. `application/config/database.php` ne contient que la structure de connexion.
 Aucune donnée réelle n'a donc été importée et **aucune donnée fictive n'a été fabriquée**.
-Le schéma est prêt à recevoir un import : chaque table métier possède une colonne `legacy_id`
+Un dump a depuis été fourni et importé (voir plus bas). Le schéma est prêt à recevoir un import : chaque table métier possède une colonne `legacy_id`
 unique permettant de préserver les anciennes clés et relations.
 À fournir pour débloquer : un dump `mysqldump` ou des exports CSV par table.
 
@@ -29,8 +29,15 @@ unique permettant de préserver les anciennes clés et relations.
 - [ ] Import des données réelles dès réception d'un dump/export exploitable
 - [ ] Gestion des utilisateurs et rôles depuis l'interface (admin)
 
-## Nouvelle demande (04/09/2026)
-- [ ] Clarifier le module Communauté selon la hiérarchie des contrôleurs legacy :
-      Fédérations → Unions / Coopératives / Associations → Membres, + Intervenants,
-      avec localisation Province → Commune → Zone → Colline.
-- [ ] Importer les données réelles du dump `cnacbgthrks_gestion.sql` (dump reçu).
+## Fait (04/09/2026)
+- [x] Module Communauté conforme aux contrôleurs legacy : Fédérations → Unions /
+      Coopératives / Associations → Membres, + Intervenants.
+- [x] Groupe Localisation : Provinces → Communes → Zones → Collines.
+- [x] Import du dump `cnacbgthrks_gestion.sql` : 5 provinces, 42 communes, 451 zones,
+      3044 collines, 9 fédérations, 4 unions, 3 coopératives, 4 associations, 6 membres,
+      1 intervenant, 5 employés, 6 véhicules, 1 bon carburant, 1 article + mouvements,
+      6 fournisseurs, 3 congés, 1 salaire. Relations préservées via `legacy_id`.
+- Réserve : dans le dump, la colonne `PRIX` de `carburant` contient le type de produit
+  (« Mazout ») et non un montant ; elle est importée dans le champ Station/Dépôt et le
+  montant reste à 0. Les tables `achats_sanya`, `ventes_sanya`, `projets`, `programmes`
+  et `partenaires` sont vides dans le dump : rien n'a été inventé.

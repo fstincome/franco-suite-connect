@@ -11,14 +11,22 @@ export function useRows(slug: string, enabled = true) {
     queryKey: ["rows", slug],
     enabled: enabled && !!mod,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(mod!.table as never)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
-      return (data ?? []) as Row[];
+      const page = 1000;
+      const all: Row[] = [];
+      for (let from = 0; from < 6000; from += page) {
+        const { data, error } = await supabase
+          .from(mod!.table as never)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, from + page - 1);
+        if (error) throw error;
+        const chunk = (data ?? []) as Row[];
+        all.push(...chunk);
+        if (chunk.length < page) break;
+      }
+      return all;
     },
+
   });
 }
 
