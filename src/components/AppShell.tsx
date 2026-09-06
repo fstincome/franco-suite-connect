@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
+import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, PieChart, Settings, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GROUPS, ORG_NAME, modulesOfGroup } from "@/lib/modules";
 import { useMyAccess } from "@/lib/access";
@@ -30,14 +30,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SideLink to="/rapports" icon={BarChart3} onNavigate={() => setOpen(false)}>
           Rapports
         </SideLink>
-        <SideLink to="/guide" icon={BookOpen} onNavigate={() => setOpen(false)}>
-          Guide d'utilisation
+        <SideLink to="/statistiques" icon={PieChart} onNavigate={() => setOpen(false)}>
+          Statistiques
         </SideLink>
-        {isAdmin ? (
-          <SideLink to="/parametres" icon={Settings} onNavigate={() => setOpen(false)}>
-            Paramètres d'accès
-          </SideLink>
-        ) : null}
       </div>
       {GROUPS.map((group) => {
         const mods = modulesOfGroup(group).filter((m) => slugs.has(m.slug));
@@ -64,8 +59,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         );
       })}
+      <div className="space-y-1 border-t border-sidebar-border pt-4">
+        {isAdmin ? (
+          <SideLink to="/parametres" icon={Settings} onNavigate={() => setOpen(false)}>
+            Paramètres d'accès
+          </SideLink>
+        ) : null}
+        <SideLink to="/guide" icon={BookOpen} onNavigate={() => setOpen(false)}>
+          Guide d'utilisation
+        </SideLink>
+      </div>
     </nav>
   );
+
 
 
   return (
