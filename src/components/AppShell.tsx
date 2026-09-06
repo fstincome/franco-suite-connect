@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
+import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, PieChart, Settings, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GROUPS, ORG_NAME, modulesOfGroup } from "@/lib/modules";
 import { useMyAccess } from "@/lib/access";
