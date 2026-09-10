@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { KeyRound, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { Field, ModuleDef } from "@/lib/modules";
 import { MODULE_MAP } from "@/lib/modules";
+import { ACCOUNT_LEVELS, createEntityAccount, type AccountLevel } from "@/lib/entity-accounts.functions";
+import { useMyAccess } from "@/lib/access";
 import { formatValue, rowLabel, useDeleteRow, useRows, useSaveRow, type Row } from "@/lib/data";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +59,34 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   function setField(name: string, value: unknown) {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
+
+  const { isAdmin } = useMyAccess();
+  const isAccountLevel = (ACCOUNT_LEVELS as readonly string[]).includes(mod.slug);
+  const canCreateAccount = isAdmin && isAccountLevel;
+  const [creatingId, setCreatingId] = useState<string | null>(null);
+  const createAccount = useServerFn(createEntityAccount);
+
+  async function handleAccount(row: Row) {
+    setCreatingId(row["id"]);
+    try {
+      const res = await createAccount({
+        data: { level: mod.slug as AccountLevel, id: row["id"] },
+      });
+      if (res.status === "exists") {
+        toast.info(`Un accès existe déjà pour ${res.email}.`);
+      } else {
+        window.alert(
+          `Accès créé.\n\nIdentifiant : ${res.email}\nMot de passe : ${res.password}\n\nNotez ce mot de passe : il ne sera plus affiché.`,
+        );
+        toast.success("Accès de connexion créé.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Création de l'accès impossible.");
+    } finally {
+      setCreatingId(null);
+    }
+  }
+
 
   const refModules = useMemo(
     () => [...new Set(mod.fields.filter((f) => f.refModule).map((f) => f.refModule!))],
@@ -198,9 +230,23 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                       </TableCell>
                     ))}
                     <TableCell className="text-right whitespace-nowrap">
+                      {canCreateAccount ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={row["user_id"] ? "Accès déjà créé" : "Créer l'accès de connexion"}
+                          disabled={!!row["user_id"] || creatingId === row["id"]}
+                          onClick={() => handleAccount(row)}
+                        >
+                          <KeyRound
+                            className={row["user_id"] ? "size-4 text-muted-foreground" : "size-4"}
+                          />
+                        </Button>
+                      ) : null}
                       <Button variant="ghost" size="icon" onClick={() => openForm(row)}>
                         <Pencil className="size-4" />
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="icon"
