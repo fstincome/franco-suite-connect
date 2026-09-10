@@ -60,6 +60,34 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  const { isAdmin } = useMyAccess();
+  const isAccountLevel = (ACCOUNT_LEVELS as readonly string[]).includes(mod.slug);
+  const canCreateAccount = isAdmin && isAccountLevel;
+  const [creatingId, setCreatingId] = useState<string | null>(null);
+  const createAccount = useServerFn(createEntityAccount);
+
+  async function handleAccount(row: Row) {
+    setCreatingId(row["id"]);
+    try {
+      const res = await createAccount({
+        data: { level: mod.slug as AccountLevel, id: row["id"] },
+      });
+      if (res.status === "exists") {
+        toast.info(`Un accès existe déjà pour ${res.email}.`);
+      } else {
+        window.alert(
+          `Accès créé.\n\nIdentifiant : ${res.email}\nMot de passe : ${res.password}\n\nNotez ce mot de passe : il ne sera plus affiché.`,
+        );
+        toast.success("Accès de connexion créé.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Création de l'accès impossible.");
+    } finally {
+      setCreatingId(null);
+    }
+  }
+
+
   const refModules = useMemo(
     () => [...new Set(mod.fields.filter((f) => f.refModule).map((f) => f.refModule!))],
     [mod],
