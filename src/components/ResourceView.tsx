@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { KeyRound, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { Field, ModuleDef } from "@/lib/modules";
 import { MODULE_MAP } from "@/lib/modules";
+import { ACCOUNT_LEVELS, createEntityAccount, type AccountLevel } from "@/lib/entity-accounts.functions";
+import { useMyAccess } from "@/lib/access";
 import { formatValue, rowLabel, useDeleteRow, useRows, useSaveRow, type Row } from "@/lib/data";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -198,9 +202,23 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                       </TableCell>
                     ))}
                     <TableCell className="text-right whitespace-nowrap">
+                      {canCreateAccount ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={row["user_id"] ? "Accès déjà créé" : "Créer l'accès de connexion"}
+                          disabled={!!row["user_id"] || creatingId === row["id"]}
+                          onClick={() => handleAccount(row)}
+                        >
+                          <KeyRound
+                            className={row["user_id"] ? "size-4 text-muted-foreground" : "size-4"}
+                          />
+                        </Button>
+                      ) : null}
                       <Button variant="ghost" size="icon" onClick={() => openForm(row)}>
                         <Pencil className="size-4" />
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="icon"
