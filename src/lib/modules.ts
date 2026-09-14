@@ -27,7 +27,7 @@ export type ModuleDef = {
   group: string;
   labelField: string;
   labelField2?: string;
-  filters?: Record<string, string>;
+  filters?: Record<string, string | boolean>;
   fixedValues?: Record<string, unknown>;
   storageBucket?: string;
   fileSizeLimitMb?: number;
