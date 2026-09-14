@@ -56,3 +56,5 @@ unique permettant de préserver les anciennes clés et relations.
       listes Service et Profil.
 - [x] Départements, Fonctions et Profils regroupés sur une seule page à onglets,
       avec une seule entrée dans le menu et maintien des droits séparés.
+- [x] Formulaire public de collecte terrain (/collecte, sans connexion) : fiches_terrain,
+      listes en cascade, suivi dans le module « Fiches terrain » et indicateur au tableau de bord.
