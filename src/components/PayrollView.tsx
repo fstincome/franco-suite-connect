@@ -187,7 +187,7 @@ export function PayrollView() {
     </Tabs>
 
     <Dialog open={editing !== undefined} onOpenChange={(open) => { if (!open) setEditing(undefined); }}><DialogContent className="sm:max-w-3xl"><DialogHeader><DialogTitle>{editing?.id ? "Modifier le salaire" : "Nouveau salaire"}</DialogTitle><DialogDescription>Les montants détaillés sont calculés automatiquement selon les règles du système source.</DialogDescription></DialogHeader><div className="grid gap-5 sm:grid-cols-2"><Field label="Employé"><Select value={employeeId} onValueChange={setEmployeeId} disabled={Boolean(editing?.id)}><SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger><SelectContent>{(data?.employees ?? []).filter((e) => editing?.employe_id === e.id || !(data?.salaries ?? []).some((s) => s.employe_id === e.id)).map((e) => <SelectItem key={e.id} value={e.id}>{e.nom} {e.prenom}</SelectItem>)}</SelectContent></Select></Field><Field label="État civil"><Select value={civil} onValueChange={setCivil}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Célibataire">Célibataire</SelectItem><SelectItem value="Marié(e)">Marié(e)</SelectItem></SelectContent></Select></Field><Field label="Nombre d’enfants"><Input type="number" min="0" max="20" value={children} onChange={(e) => setChildren(e.target.value)} /></Field><Field label="Salaire de base (FBu)"><Input type="number" min="0" value={base} onChange={(e) => setBase(e.target.value)} /></Field></div><Card className="bg-muted/40"><CardContent className="grid gap-3 pt-5 sm:grid-cols-3"><Preview label="Salaire brut" value={preview.gross} /><Preview label="IPR" value={preview.tax} /><Preview label="Net à payer" value={preview.net} /></CardContent></Card><DialogFooter><Button variant="outline" onClick={() => setEditing(undefined)}>Annuler</Button><Button disabled={!employeeId || Number(base) <= 0 || saveSalary.isPending} onClick={() => saveSalary.mutate()}>Enregistrer et calculer</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={pdfPreview !== null} onOpenChange={(open) => { if (!open) closePdfPreview(); }}><DialogContent className="flex h-[92vh] max-w-[95vw] flex-col sm:max-w-5xl"><DialogHeader><DialogTitle>Fiche mensuelle de paie</DialogTitle><DialogDescription>Consultez le document avant de l’imprimer ou de le télécharger.</DialogDescription></DialogHeader><PdfPreview url={pdfPreview?.url} /><DialogFooter className="flex-row justify-end gap-2"><Button variant="outline" onClick={printPdf}><Printer className="mr-2 size-4" />Imprimer</Button><Button asChild><a href={pdfPreview?.url} download={pdfPreview?.name}><Download className="mr-2 size-4" />Télécharger</a></Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={pdfPreview !== null} onOpenChange={(open) => { if (!open) closePdfPreview(); }}><DialogContent className="flex h-[92vh] max-w-[95vw] flex-col sm:max-w-5xl"><DialogHeader><DialogTitle>Fiche mensuelle de paie</DialogTitle><DialogDescription>Consultez le document avant de l’imprimer ou de le télécharger.</DialogDescription></DialogHeader>{pdfPreview ? <PdfPreview url={pdfPreview.url} /> : null}<DialogFooter className="flex-row justify-end gap-2"><Button variant="outline" onClick={printPdf}><Printer className="mr-2 size-4" />Imprimer</Button><Button asChild><a href={pdfPreview?.url} download={pdfPreview?.name}><Download className="mr-2 size-4" />Télécharger</a></Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }
 
@@ -197,13 +197,13 @@ function Preview({ label, value }: { label: string; value: number }) { return <d
 function StatusBadge({ status }: { status: string }) { return <Badge variant={status === "Payé" ? "default" : status === "Annulé" ? "destructive" : "outline"}>{status}</Badge>; }
 function DataFrame({ columns, children, loading, empty }: { columns: string[]; children: React.ReactNode; loading: boolean; empty: boolean }) { return <div className="overflow-x-auto rounded-lg border bg-card"><Table><TableHeader><TableRow>{columns.map((c) => <TableHead key={c} className="whitespace-nowrap">{c}</TableHead>)}</TableRow></TableHeader><TableBody>{loading || empty ? <TableRow><TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">{loading ? "Chargement…" : "Aucune donnée disponible."}</TableCell></TableRow> : children}</TableBody></Table></div>; }
 
-function PdfPreview({ url }: { url?: string }) {
+function PdfPreview({ url }: { url: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!url || !container) return;
+    if (!container) return;
     let cancelled = false;
     container.replaceChildren();
     setError("");
@@ -222,7 +222,7 @@ function PdfPreview({ url }: { url?: string }) {
           if (!context) throw new Error("Aperçu indisponible");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          canvas.dataset.payrollPdfPage = "true";
+          canvas.dataset["payrollPdfPage"] = "true";
           canvas.className = "mx-auto block h-auto w-full max-w-[794px] bg-card shadow-sm";
           container.appendChild(canvas);
           await page.render({ canvas, canvasContext: context, viewport }).promise;
