@@ -14,7 +14,7 @@ export const Route = createFileRoute("/m/$module")({
     if (error || !data.user) throw redirect({ to: "/auth" });
     if (!MODULE_MAP[params.module]) throw notFound();
     if (["departements", "fonctions", "profils"].includes(params.module)) {
-      throw redirect({ to: "/structure-profils" });
+      throw redirect({ to: "/structure-profils", search: { onglet: params.module } });
     }
   },
   head: ({ params }) => {

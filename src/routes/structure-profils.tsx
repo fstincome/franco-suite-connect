@@ -6,6 +6,12 @@ import { ORG_NAME } from "@/lib/modules";
 
 export const Route = createFileRoute("/structure-profils")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    onglet:
+      typeof search.onglet === "string" && ["departements", "fonctions", "profils"].includes(search.onglet)
+        ? search.onglet
+        : undefined,
+  }),
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
@@ -31,9 +37,10 @@ export const Route = createFileRoute("/structure-profils")({
 });
 
 function ProfileStructurePage() {
+  const { onglet } = Route.useSearch();
   return (
     <AppShell>
-      <ProfileStructureView />
+      <ProfileStructureView initialTab={onglet} />
     </AppShell>
   );
 }

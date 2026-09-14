@@ -11,13 +11,13 @@ const STRUCTURE_TABS = [
   { slug: "profils", label: "Profils" },
 ] as const;
 
-export function ProfileStructureView() {
+export function ProfileStructureView({ initialTab }: { initialTab?: string }) {
   const { slugs, isLoading } = useMyAccess();
   const availableTabs = useMemo(
     () => STRUCTURE_TABS.filter((tab) => slugs.has(tab.slug)),
     [slugs],
   );
-  const [activeTab, setActiveTab] = useState<string>("departements");
+  const [activeTab, setActiveTab] = useState<string>(initialTab ?? "departements");
 
   useEffect(() => {
     if (!availableTabs.some((tab) => tab.slug === activeTab) && availableTabs[0]) {
