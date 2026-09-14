@@ -235,6 +235,12 @@ function Dashboard() {
             hint={`${vehicules.length} véhicule(s) au parc`}
             tone={aEntretenir.length > 0 ? "warn" : "ok"}
           />
+          <Kpi
+            icon={ClipboardList}
+            label="Fiches terrain reçues"
+            value={String(fiches.length)}
+            hint="Via le formulaire public de collecte"
+          />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
