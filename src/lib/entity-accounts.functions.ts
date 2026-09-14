@@ -76,26 +76,39 @@ export const createEntityAccount = createServerFn({ method: "POST" })
         niveau: data.level,
       },
     });
-    if (createError || !created.user) {
-      throw new Error(createError?.message ?? "Création du compte impossible.");
+    let userId = created.user?.id;
+    let linkedExisting = false;
+    if (createError || !userId) {
+      const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const existing = users.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
+      if (listError || !existing) {
+        throw new Error(createError?.message ?? listError?.message ?? "Création du compte impossible.");
+      }
+      userId = existing.id;
+      linkedExisting = true;
     }
-    const userId = created.user.id;
 
     const start = LEVEL_CHAIN.indexOf(data.level as (typeof LEVEL_CHAIN)[number]);
     const slugs = data.level === "employes"
       ? ["employes", "conges", "presences", "salaires"]
       : LEVEL_CHAIN.slice(start);
-    await supabaseAdmin
+    const { error: accessError } = await supabaseAdmin
       .from("user_module_access")
       .upsert(
         slugs.map((slug) => ({ user_id: userId, module_slug: slug })),
         { onConflict: "user_id,module_slug" },
       );
+    if (accessError) throw new Error(accessError.message);
     const { error: linkError } = await supabaseAdmin
       .from(data.level)
       .update({ user_id: userId })
       .eq("id", data.id);
     if (linkError) throw new Error(linkError.message);
 
-    return { status: "created" as const, email, password };
+    return linkedExisting
+      ? { status: "linked" as const, email, password: null }
+      : { status: "created" as const, email, password };
   });

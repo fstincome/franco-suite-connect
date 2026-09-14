@@ -77,6 +77,8 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
       });
       if (res.status === "exists") {
         toast.info(`Un accès existe déjà pour ${res.email}.`);
+      } else if (res.status === "linked") {
+        toast.success(`Le compte existant ${res.email} a été lié à cette fiche.`);
       } else {
         window.alert(
           `Accès créé.\n\nIdentifiant : ${res.email}\nMot de passe : ${res.password}\n\nNotez ce mot de passe : il ne sera plus affiché.`,
