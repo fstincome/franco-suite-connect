@@ -15,7 +15,7 @@ export type Field = {
   form?: boolean;
   /** Filtre les options par héritage : l'option doit partager la valeur `via`
    * de l'enregistrement sélectionné dans le champ `field`. */
-  filterBy?: { field: string; via: string };
+  filterBy?: { field: string; via: string; match?: string };
 };
 
 export type ModuleDef = {
