@@ -619,6 +619,31 @@ export const MODULES: ModuleDef[] = [
       { name: "zone_id", label: "Zone", type: "ref", refModule: "zones", list: true },
     ],
   },
+  {
+    slug: "fiches-terrain",
+    table: "fiches_terrain",
+    title: "Fiches terrain",
+    singular: "Fiche terrain",
+    description:
+      "Fiches envoyées par les agents de terrain via le formulaire public de collecte (/collecte).",
+    group: "Communauté",
+    labelField: "nom",
+    labelField2: "prenom",
+    fields: [
+      { name: "nom", label: "Nom", type: "text", list: true, required: true },
+      { name: "prenom", label: "Prénom", type: "text", list: true },
+      { name: "province", label: "Province", type: "text", list: true },
+      { name: "commune", label: "Commune", type: "text", list: true },
+      { name: "zone", label: "Zone", type: "text" },
+      { name: "colline", label: "Colline", type: "text" },
+      { name: "federation", label: "Fédération", type: "text", list: true },
+      { name: "union_nom", label: "Union", type: "text" },
+      { name: "cooperative", label: "Coopérative", type: "text" },
+      { name: "association", label: "Association", type: "text", list: true },
+      { name: "telephone", label: "Téléphone", type: "text", list: true },
+      { name: "date_adhesion", label: "Date d'adhésion", type: "date", list: true },
+    ],
+  },
 
   {
     slug: "operations",
