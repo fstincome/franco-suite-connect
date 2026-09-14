@@ -142,7 +142,8 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     const parent = (refData[parentField.refModule] ?? []).find((r) => r["id"] === parentId);
     const inherited = parent?.[f.filterBy.via];
     if (!inherited) return [];
-    return all.filter((o) => o[f.filterBy!.via] === inherited);
+    const childColumn = f.filterBy.match ?? f.filterBy.via;
+    return all.filter((o) => o[childColumn] === inherited);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

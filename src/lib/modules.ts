@@ -15,7 +15,7 @@ export type Field = {
   form?: boolean;
   /** Filtre les options par héritage : l'option doit partager la valeur `via`
    * de l'enregistrement sélectionné dans le champ `field`. */
-  filterBy?: { field: string; via: string };
+  filterBy?: { field: string; via: string; match?: string };
 };
 
 export type ModuleDef = {
@@ -44,6 +44,66 @@ const STATUT = (options: string[]): Field => ({
 
 export const MODULES: ModuleDef[] = [
   {
+    slug: "departements",
+    table: "departements",
+    title: "1. Départements",
+    singular: "Département",
+    description: "Niveau 1 de la structure : les grands départements de l'organisation.",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom du département", type: "text", list: true, required: true },
+      { name: "code", label: "Code", type: "text", list: true },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
+    slug: "fonctions",
+    table: "fonctions",
+    title: "2. Fonctions",
+    singular: "Fonction",
+    description: "Niveau 2 : une fonction appartient à un département.",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom de la fonction", type: "text", list: true, required: true },
+      {
+        name: "departement_id",
+        label: "Département",
+        type: "ref",
+        refModule: "departements",
+        list: true,
+        required: true,
+      },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
+    slug: "profils",
+    table: "profils",
+    title: "3. Profils",
+    singular: "Profil",
+    description:
+      "Niveau 3 : un profil appartient à une fonction (exemple : Administration > Finances > Comptable).",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom du profil", type: "text", list: true, required: true },
+      {
+        name: "fonction_id",
+        label: "Fonction",
+        type: "ref",
+        refModule: "fonctions",
+        list: true,
+        required: true,
+      },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
     slug: "employes",
     table: "employes",
     title: "Employés",
@@ -62,9 +122,9 @@ export const MODULES: ModuleDef[] = [
       { name: "localite", label: "Adresse / localité", type: "text", section: "Identité et contact" },
       { name: "categorie_personnel", label: "Catégorie", type: "select", list: true, required: true, options: ["Permanent", "Non permanent"], section: "Affectation" },
       { name: "niveau_etudes", label: "Niveau d'études", type: "select", options: ["Humanités Générales", "Baccalauréat", "Maitrise", "Doctorat", "Primaire", "Secondaire", "Prefesseur"], section: "Affectation" },
-      { name: "service", label: "Service", type: "select", list: true, options: ["Comité Exécutif", "Comité de surveillance", "Coordination du Programme Encadrement et Environnement", "Coordination du programme Communication et Information", "Coordination du Programme de Plaidoyer", "Coordination des Projets de Renforcement du mouvement Associatif et Coopératif (AREMOCOOP, PER, SARCA et ASAM)", "Service d’Administration & Finance", "Ressources Humaines", "Assemblée Générale", "Appropriation des jeunes dans le développement du café"], section: "Affectation" },
-      { name: "profil", label: "Profil", type: "select", options: ["Président", "Secrétaire Général", "Coordinateur", "Agronomes", "Moniteurs café", "Personne relais", "Chargé de la communication et du plaidoyer", "Animateur", "RAF", "Comptable", "Caissier(e)", "Veilleur", "Planton", "Chauffeur", "Fédération", "Coopérative", "Union", "Association", "Intervenant", "RRH"], section: "Affectation" },
-      { name: "fonction", label: "Fonction", type: "text", list: true, section: "Affectation" },
+      { name: "departement_id", label: "Département", type: "ref", refModule: "departements", list: true, section: "Affectation" },
+      { name: "fonction_id", label: "Fonction", type: "ref", refModule: "fonctions", list: true, section: "Affectation", filterBy: { field: "departement_id", via: "id", match: "departement_id" } },
+      { name: "profil_id", label: "Profil", type: "ref", refModule: "profils", list: true, section: "Affectation", filterBy: { field: "fonction_id", via: "id", match: "fonction_id" } },
       { name: "responsable", label: "Responsable", type: "select", options: ["Oui", "Non"], section: "Affectation" },
       { name: "date_entree", label: "Date d'entrée", type: "date", section: "Affectation" },
       { name: "date_sortie", label: "Date de sortie", type: "date", section: "Affectation" },

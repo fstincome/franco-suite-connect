@@ -48,3 +48,8 @@ unique permettant de préserver les anciennes clés et relations.
       fichiers privés et 13 enregistrements réels importés depuis le dump.
 - [x] Paie séparée des fiches Employés : paramétrage, calcul détaillé automatique,
       fiches mensuelles, circuit de validation et données réelles du dump.
+
+## Fait (profils)
+- [x] Gestion des profils : Départements → Fonctions → Profils (listes dédiées) et
+      affectation en cascade dans la fiche Employé, en remplacement des anciennes
+      listes Service et Profil.
