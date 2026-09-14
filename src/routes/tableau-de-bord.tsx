@@ -86,6 +86,7 @@ function Dashboard() {
   const carburant = data?.carburant ?? [];
   const vehicules = data?.vehicules ?? [];
   const entretiens = data?.entretiens ?? [];
+  const fiches = data?.fiches ?? [];
   const vide =
     !isLoading &&
     articles.length === 0 &&
