@@ -225,7 +225,7 @@ function PdfPreview({ url }: { url: string }) {
           canvas.dataset["payrollPdfPage"] = "true";
           canvas.className = "mx-auto block h-auto w-full max-w-[794px] bg-card shadow-sm";
           container.appendChild(canvas);
-          await page.render({ canvas, canvasContext: context, viewport }).promise;
+          await page.render({ canvasContext: context, viewport }).promise;
         }
       } catch (renderError) {
         const detail = renderError instanceof Error ? renderError.message : "Erreur inconnue";
