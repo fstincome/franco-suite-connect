@@ -46,6 +46,7 @@ export const Route = createFileRoute("/parametres")({
 
 const STRUCTURE_SLUGS = new Set(["departements", "fonctions", "profils"]);
 const PROJECT_SLUGS = new Set(["programmes", "partenaires", "projets"]);
+const BANK_SLUGS = new Set(["banque-versements", "banque-retraits", "imputations"]);
 
 function ModuleGrid({
   granted,
