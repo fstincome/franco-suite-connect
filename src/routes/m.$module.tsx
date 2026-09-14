@@ -13,6 +13,9 @@ export const Route = createFileRoute("/m/$module")({
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
     if (!MODULE_MAP[params.module]) throw notFound();
+    if (["departements", "fonctions", "profils"].includes(params.module)) {
+      throw redirect({ to: "/structure-profils", search: { onglet: params.module } });
+    }
   },
   head: ({ params }) => {
     const mod = MODULE_MAP[params.module];

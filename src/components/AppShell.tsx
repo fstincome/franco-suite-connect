@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, BookOpen, LayoutDashboard, LogOut, Menu, PieChart, Settings, X } from "lucide-react";
+import { BarChart3, BookOpen, Building2, LayoutDashboard, LogOut, Menu, PieChart, Settings, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GROUPS, ORG_NAME, modulesOfGroup } from "@/lib/modules";
 import { useMyAccess } from "@/lib/access";
@@ -13,6 +13,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin, slugs } = useMyAccess();
+  const structureSlugs = new Set(["departements", "fonctions", "profils"]);
+  const canSeeStructure = [...structureSlugs].some((slug) => slugs.has(slug));
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -35,14 +37,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SideLink>
       </div>
       {GROUPS.map((group) => {
-        const mods = modulesOfGroup(group).filter((m) => slugs.has(m.slug));
-        if (!mods.length) return null;
+        const mods = modulesOfGroup(group).filter(
+          (m) => slugs.has(m.slug) && !structureSlugs.has(m.slug),
+        );
+        const showStructure = group === "Administration / RH" && canSeeStructure;
+        if (!mods.length && !showStructure) return null;
         return (
           <div key={group}>
             <p className="px-3 pb-1 text-[11px] font-semibold tracking-widest text-sidebar-foreground/50 uppercase">
               {group}
             </p>
             <div className="space-y-0.5">
+              {showStructure ? (
+                <SideLink to="/structure-profils" icon={Building2} onNavigate={() => setOpen(false)}>
+                  Structure des profils
+                </SideLink>
+              ) : null}
               {mods.map((m) => (
                 <Link
                   key={m.slug}

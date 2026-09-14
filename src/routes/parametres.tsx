@@ -73,6 +73,7 @@ function ParametresPage() {
   }
 
   const current = users?.find((u) => u.id === selected) ?? null;
+  const structureSlugs = new Set(["departements", "fonctions", "profils"]);
 
   return (
     <AppShell>
@@ -177,7 +178,37 @@ function ParametresPage() {
                       {group}
                     </p>
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {modulesOfGroup(group).map((m) => {
+                      {group === "Administration / RH" ? (
+                        <div className="space-y-2 rounded-md border p-3 sm:col-span-2 lg:col-span-3">
+                          <p className="text-sm font-medium">Structure des profils</p>
+                          <div className="grid gap-2 sm:grid-cols-3">
+                            {modulesOfGroup(group)
+                              .filter((m) => structureSlugs.has(m.slug))
+                              .map((m) => {
+                                const checked = current.slugs.includes(m.slug);
+                                return (
+                                  <label
+                                    key={m.slug}
+                                    className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
+                                  >
+                                    <Checkbox
+                                      checked={checked}
+                                      onCheckedChange={(v) =>
+                                        setAccess.mutate({
+                                          userId: current.id,
+                                          slug: m.slug,
+                                          allowed: v === true,
+                                        })
+                                      }
+                                    />
+                                    <span>{m.title}</span>
+                                  </label>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      ) : null}
+                      {modulesOfGroup(group).filter((m) => !structureSlugs.has(m.slug)).map((m) => {
                         const checked = current.slugs.includes(m.slug);
                         return (
                           <label

@@ -38,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export function ResourceView({ mod }: { mod: ModuleDef }) {
+export function ResourceView({ mod, compactHeading = false }: { mod: ModuleDef; compactHeading?: boolean }) {
   const { data: rows = [], isLoading } = useRows(mod.slug);
   const save = useSaveRow(mod.slug);
   const remove = useDeleteRow(mod.slug);
@@ -224,7 +224,11 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
+          {compactHeading ? (
+            <h2 className="text-lg font-semibold">{mod.title}</h2>
+          ) : (
+            <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
         </div>
         <Button onClick={() => openForm({})}>
