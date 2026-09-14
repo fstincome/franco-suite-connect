@@ -15,6 +15,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as RapportsRouteImport } from './routes/rapports'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
+import { Route as StructureProfilsRouteImport } from './routes/structure-profils'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as MModuleRouteImport } from './routes/m.$module'
 
@@ -48,6 +49,11 @@ const StatistiquesRoute = StatistiquesRouteImport.update({
   path: '/statistiques',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StructureProfilsRoute = StructureProfilsRouteImport.update({
+  id: '/structure-profils',
+  path: '/structure-profils',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TableauDeBordRoute = TableauDeBordRouteImport.update({
   id: '/tableau-de-bord',
   path: '/tableau-de-bord',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof ParametresRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
+  '/structure-profils': typeof StructureProfilsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/parametres': typeof ParametresRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
+  '/structure-profils': typeof StructureProfilsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/parametres': typeof ParametresRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
+  '/structure-profils': typeof StructureProfilsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/m/$module': typeof MModuleRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/rapports'
     | '/statistiques'
+    | '/structure-profils'
     | '/tableau-de-bord'
     | '/m/$module'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/rapports'
     | '/statistiques'
+    | '/structure-profils'
     | '/tableau-de-bord'
     | '/m/$module'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/rapports'
     | '/statistiques'
+    | '/structure-profils'
     | '/tableau-de-bord'
     | '/m/$module'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   ParametresRoute: typeof ParametresRoute
   RapportsRoute: typeof RapportsRoute
   StatistiquesRoute: typeof StatistiquesRoute
+  StructureProfilsRoute: typeof StructureProfilsRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   MModuleRoute: typeof MModuleRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatistiquesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/structure-profils': {
+      id: '/structure-profils'
+      path: '/structure-profils'
+      fullPath: '/structure-profils'
+      preLoaderRoute: typeof StructureProfilsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tableau-de-bord': {
       id: '/tableau-de-bord'
       path: '/tableau-de-bord'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParametresRoute: ParametresRoute,
   RapportsRoute: RapportsRoute,
   StatistiquesRoute: StatistiquesRoute,
+  StructureProfilsRoute: StructureProfilsRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   MModuleRoute: MModuleRoute,
 }
