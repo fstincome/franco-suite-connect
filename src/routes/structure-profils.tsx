@@ -8,8 +8,8 @@ export const Route = createFileRoute("/structure-profils")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
     onglet:
-      typeof search.onglet === "string" && ["departements", "fonctions", "profils"].includes(search.onglet)
-        ? search.onglet
+      typeof search["onglet"] === "string" && ["departements", "fonctions", "profils"].includes(search["onglet"])
+        ? search["onglet"]
         : undefined,
   }),
   beforeLoad: async () => {

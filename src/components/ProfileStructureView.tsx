@@ -11,7 +11,7 @@ const STRUCTURE_TABS = [
   { slug: "profils", label: "Profils" },
 ] as const;
 
-export function ProfileStructureView({ initialTab }: { initialTab?: string }) {
+export function ProfileStructureView({ initialTab }: { initialTab: string | undefined }) {
   const { slugs, isLoading } = useMyAccess();
   const availableTabs = useMemo(
     () => STRUCTURE_TABS.filter((tab) => slugs.has(tab.slug)),
