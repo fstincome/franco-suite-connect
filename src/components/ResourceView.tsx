@@ -277,7 +277,11 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                   <TableRow key={row["id"]}>
                     {listFields.map((f) => (
                       <TableCell key={f.name}>
-                        {f.refModule ? (
+                        {f.type === "file" && row[f.name] ? (
+                          <Button variant="ghost" size="icon" title="Consulter le document" onClick={() => openDocument(row[f.name])}>
+                            <FileText className="size-4" />
+                          </Button>
+                        ) : f.refModule ? (
                           refLabel(f.refModule, row[f.name])
                         ) : f.name === "statut" ? (
                           <Badge variant="outline">{row[f.name] ?? "—"}</Badge>
@@ -295,11 +299,6 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                       {mod.slug === "employes" && row["dossier_path"] ? (
                         <Button variant="ghost" size="icon" title="Consulter le dossier administratif" onClick={() => openDocument(row["dossier_path"])}>
                           <FolderOpen className="size-4" />
-                        </Button>
-                      ) : null}
-                      {(mod.slug === "archives" || mod.slug === "planifications") && row["fichier_path"] ? (
-                        <Button variant="ghost" size="icon" title="Consulter le document" onClick={() => openDocument(row["fichier_path"])}>
-                          <FileText className="size-4" />
                         </Button>
                       ) : null}
                       {canCreateAccount ? (
