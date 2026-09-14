@@ -21,16 +21,28 @@ export function useMyAccess() {
     queryKey: ["my-access", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const [roles, access] = await Promise.all([
+      const [roles, access, employe] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", user!.id),
         supabase.from("user_module_access").select("module_slug").eq("user_id", user!.id),
+        supabase.from("employes").select("profil_id").eq("user_id", user!.id).maybeSingle(),
       ]);
       if (roles.error) throw roles.error;
       if (access.error) throw access.error;
       const roleList = (roles.data ?? []).map((r) => r.role as AppRole);
       const isAdmin = roleList.includes("admin");
+      const direct = (access.data ?? []).map((a) => a.module_slug);
+      let inherited: string[] = [];
+      const profilId = employe.data?.profil_id ?? null;
+      if (!isAdmin && profilId) {
+        const byProfil = await supabase
+          .from("profil_module_access")
+          .select("module_slug")
+          .eq("profil_id", profilId);
+        if (byProfil.error) throw byProfil.error;
+        inherited = (byProfil.data ?? []).map((a) => a.module_slug);
+      }
       const slugs = new Set(
-        isAdmin ? MODULES.map((m) => m.slug) : (access.data ?? []).map((a) => a.module_slug),
+        isAdmin ? MODULES.map((m) => m.slug) : [...direct, ...inherited],
       );
       return { isAdmin, roles: roleList, slugs };
     },
