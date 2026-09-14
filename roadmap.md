@@ -4,14 +4,13 @@
 Reconstruction moderne du progiciel CodeIgniter fourni (`application.zip`) en application web
 React / TanStack Start + Lovable Cloud, entièrement en français.
 
-## Import des données source — BLOQUÉ
+## Import des données source — TERMINÉ
 L'archive `application.zip` (et les archives imbriquées `administration.zip`, `communaute.zip`,
 `projets.zip`) ne contient **que du code PHP** : aucun fichier `.sql`, dump MySQL, `.csv`, `.json`
 ou export tableur. `application/config/database.php` ne contient que la structure de connexion.
-Aucune donnée réelle n'a donc été importée et **aucune donnée fictive n'a été fabriquée**.
-Un dump a depuis été fourni et importé (voir plus bas). Le schéma est prêt à recevoir un import : chaque table métier possède une colonne `legacy_id`
+Aucun export n'était présent dans l'archive initiale. Un dump a ensuite été fourni et importé sans fabriquer de données.
+Le schéma conserve une colonne `legacy_id`
 unique permettant de préserver les anciennes clés et relations.
-À fournir pour débloquer : un dump `mysqldump` ou des exports CSV par table.
 
 ## Fait
 - [x] Analyse de l'archive et cartographie des modules
@@ -26,8 +25,7 @@ unique permettant de préserver les anciennes clés et relations.
 - [x] Suppression de l'option publique « Créer un compte » (connexion e-mail/mot de passe uniquement)
 
 ## À venir
-- [ ] Import des données réelles dès réception d'un dump/export exploitable
-- [ ] Gestion des utilisateurs et rôles depuis l'interface (admin)
+- [x] Gestion des utilisateurs, rôles et accès aux onglets depuis l'interface administrateur
 
 ## Fait (04/09/2026)
 - [x] Module Communauté conforme aux contrôleurs legacy : Fédérations → Unions /
@@ -41,3 +39,9 @@ unique permettant de préserver les anciennes clés et relations.
   (« Mazout ») et non un montant ; elle est importée dans le champ Station/Dépôt et le
   montant reste à 0. Les tables `achats_sanya`, `ventes_sanya`, `projets`, `programmes`
   et `partenaires` sont vides dans le dump : rien n'a été inventé.
+
+## Fait (14/09/2026)
+- [x] Fiches Employés alignées sur les contrôleurs source : permanents/non permanents,
+      statuts, études, affectation, profil, banque, compte, responsabilité, contrat et dossier.
+- [x] Les cinq employés importés ont été complétés avec les valeurs réelles du dump.
+- [x] Documents RH privés limités à 5 Mo et création sécurisée des comptes employés par l'admin.

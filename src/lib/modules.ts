@@ -1,6 +1,6 @@
 export const ORG_NAME = "CNAC MURIMA W'ISANGI";
 
-export type FieldType = "text" | "number" | "date" | "textarea" | "select" | "ref";
+export type FieldType = "text" | "number" | "date" | "textarea" | "select" | "ref" | "file";
 
 export type Field = {
   name: string;
@@ -11,6 +11,7 @@ export type Field = {
   options?: string[];
   refModule?: string;
   suffix?: string;
+  section?: string;
   /** Filtre les options par héritage : l'option doit partager la valeur `via`
    * de l'enregistrement sélectionné dans le champ `field`. */
   filterBy?: { field: string; via: string };
@@ -42,24 +43,32 @@ export const MODULES: ModuleDef[] = [
     table: "employes",
     title: "Employés",
     singular: "Employé",
-    description: "Dossiers du personnel : identité, affectation et rémunération de base.",
+    description: "Dossiers complets du personnel permanent et non permanent.",
     group: "Administration / RH",
     labelField: "nom",
     labelField2: "prenom",
     fields: [
-      { name: "matricule", label: "Matricule", type: "text", list: true },
-      { name: "nom", label: "Nom", type: "text", list: true, required: true },
-      { name: "prenom", label: "Prénom", type: "text", list: true },
-      { name: "telephone", label: "Téléphone", type: "text", list: true },
-      { name: "email", label: "E-mail", type: "text" },
-      { name: "fonction", label: "Fonction", type: "text", list: true },
-      { name: "service", label: "Service", type: "text", list: true },
-      { name: "localite", label: "Localité", type: "text" },
-      { name: "cni", label: "CNI", type: "text" },
-      { name: "date_entree", label: "Date d'entrée", type: "date" },
-      { name: "date_sortie", label: "Date de sortie", type: "date" },
-      { name: "salaire_base", label: "Salaire de base", type: "number", list: true },
-      STATUT(["Actif", "Suspendu", "Retraité", "Parti"]),
+      { name: "matricule", label: "Matricule", type: "text", list: true, section: "Identité et contact" },
+      { name: "nom", label: "Nom", type: "text", list: true, required: true, section: "Identité et contact" },
+      { name: "prenom", label: "Prénom", type: "text", list: true, section: "Identité et contact" },
+      { name: "telephone", label: "Téléphone", type: "text", list: true, section: "Identité et contact" },
+      { name: "email", label: "E-mail de connexion", type: "text", section: "Identité et contact" },
+      { name: "cni", label: "CNI", type: "text", section: "Identité et contact" },
+      { name: "localite", label: "Adresse / localité", type: "text", section: "Identité et contact" },
+      { name: "categorie_personnel", label: "Catégorie", type: "select", list: true, required: true, options: ["Permanent", "Non permanent"], section: "Affectation" },
+      { name: "niveau_etudes", label: "Niveau d'études", type: "select", options: ["Humanités Générales", "Baccalauréat", "Maitrise", "Doctorat", "Primaire", "Secondaire", "Prefesseur"], section: "Affectation" },
+      { name: "service", label: "Service", type: "select", list: true, options: ["Comité Exécutif", "Comité de surveillance", "Coordination du Programme Encadrement et Environnement", "Coordination du programme Communication et Information", "Coordination du Programme de Plaidoyer", "Coordination des Projets de Renforcement du mouvement Associatif et Coopératif (AREMOCOOP, PER, SARCA et ASAM)", "Service d’Administration & Finance", "Ressources Humaines", "Assemblée Générale", "Appropriation des jeunes dans le développement du café"], section: "Affectation" },
+      { name: "profil", label: "Profil", type: "select", options: ["Président", "Secrétaire Général", "Coordinateur", "Agronomes", "Moniteurs café", "Personne relais", "Chargé de la communication et du plaidoyer", "Animateur", "RAF", "Comptable", "Caissier(e)", "Veilleur", "Planton", "Chauffeur", "Fédération", "Coopérative", "Union", "Association", "Intervenant", "RRH"], section: "Affectation" },
+      { name: "fonction", label: "Fonction", type: "text", list: true, section: "Affectation" },
+      { name: "responsable", label: "Responsable", type: "select", options: ["Oui", "Non"], section: "Affectation" },
+      { name: "date_entree", label: "Date d'entrée", type: "date", section: "Affectation" },
+      { name: "date_sortie", label: "Date de sortie", type: "date", section: "Affectation" },
+      { ...STATUT(["Disponible", "En congé", "En formation", "Inactif"]), section: "Affectation" },
+      { name: "banque", label: "Banque", type: "text", section: "Informations bancaires" },
+      { name: "numero_compte", label: "Numéro de compte", type: "text", section: "Informations bancaires" },
+      { name: "salaire_base", label: "Salaire de base", type: "number", list: true, section: "Informations bancaires" },
+      { name: "contrat_path", label: "Contrat", type: "file", section: "Contrat et dossier" },
+      { name: "dossier_path", label: "Dossier administratif", type: "file", section: "Contrat et dossier" },
     ],
   },
   {

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Niveaux communautaires pouvant disposer d'un compte de connexion (pas les membres). */
-export const ACCOUNT_LEVELS = ["federations", "unions", "cooperatives", "associations"] as const;
+export const ACCOUNT_LEVELS = ["federations", "unions", "cooperatives", "associations", "employes"] as const;
 export type AccountLevel = (typeof ACCOUNT_LEVELS)[number];
 
 /** Onglets accordés à l'entité : son niveau et les niveaux inférieurs. */
@@ -40,7 +40,7 @@ export const createEntityAccount = createServerFn({ method: "POST" })
 
     const { data: row, error: rowError } = await supabaseAdmin
       .from(data.level)
-      .select("id, nom, email, user_id")
+      .select(data.level === "employes" ? "id, nom, prenom, email, user_id" : "id, nom, email, user_id")
       .eq("id", data.id)
       .maybeSingle();
     if (rowError) throw new Error(rowError.message);
@@ -58,7 +58,12 @@ export const createEntityAccount = createServerFn({ method: "POST" })
       email,
       password,
       email_confirm: true,
-      user_metadata: { nom_complet: (row as { nom: string }).nom, niveau: data.level },
+      user_metadata: {
+        nom_complet: [(row as { nom: string }).nom, (row as { prenom?: string | null }).prenom]
+          .filter(Boolean)
+          .join(" "),
+        niveau: data.level,
+      },
     });
     if (createError || !created.user) {
       throw new Error(createError?.message ?? "Création du compte impossible.");
@@ -66,7 +71,9 @@ export const createEntityAccount = createServerFn({ method: "POST" })
     const userId = created.user.id;
 
     const start = LEVEL_CHAIN.indexOf(data.level as (typeof LEVEL_CHAIN)[number]);
-    const slugs = LEVEL_CHAIN.slice(start);
+    const slugs = data.level === "employes"
+      ? ["employes", "conges", "presences", "salaires"]
+      : LEVEL_CHAIN.slice(start);
     await supabaseAdmin
       .from("user_module_access")
       .upsert(
