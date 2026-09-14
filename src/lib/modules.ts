@@ -44,6 +44,66 @@ const STATUT = (options: string[]): Field => ({
 
 export const MODULES: ModuleDef[] = [
   {
+    slug: "departements",
+    table: "departements",
+    title: "1. Départements",
+    singular: "Département",
+    description: "Niveau 1 de la structure : les grands départements de l'organisation.",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom du département", type: "text", list: true, required: true },
+      { name: "code", label: "Code", type: "text", list: true },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
+    slug: "fonctions",
+    table: "fonctions",
+    title: "2. Fonctions",
+    singular: "Fonction",
+    description: "Niveau 2 : une fonction appartient à un département.",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom de la fonction", type: "text", list: true, required: true },
+      {
+        name: "departement_id",
+        label: "Département",
+        type: "ref",
+        refModule: "departements",
+        list: true,
+        required: true,
+      },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
+    slug: "profils",
+    table: "profils",
+    title: "3. Profils",
+    singular: "Profil",
+    description:
+      "Niveau 3 : un profil appartient à une fonction (exemple : Administration > Finances > Comptable).",
+    group: "Administration / RH",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom du profil", type: "text", list: true, required: true },
+      {
+        name: "fonction_id",
+        label: "Fonction",
+        type: "ref",
+        refModule: "fonctions",
+        list: true,
+        required: true,
+      },
+      { name: "description", label: "Description", type: "textarea" },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
     slug: "employes",
     table: "employes",
     title: "Employés",
