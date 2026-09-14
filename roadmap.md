@@ -24,7 +24,6 @@ unique permettant de préserver les anciennes clés et relations.
 - [x] Compte administrateur initial advaxen@gmail.com avec tous les droits
 - [x] Suppression de l'option publique « Créer un compte » (connexion e-mail/mot de passe uniquement)
 
-## À venir
 - [x] Gestion des utilisateurs, rôles et accès aux onglets depuis l'interface administrateur
 
 ## Fait (04/09/2026)
