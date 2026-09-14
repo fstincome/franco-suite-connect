@@ -10,7 +10,7 @@ const TABS = new Set(["programmes", "partenaires", "projets"]);
 export const Route = createFileRoute("/projets-partenariats")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
-    onglet: typeof search.onglet === "string" && TABS.has(search.onglet) ? search.onglet : "programmes",
+    onglet: typeof search["onglet"] === "string" && TABS.has(search["onglet"]) ? search["onglet"] : "programmes",
   }),
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
