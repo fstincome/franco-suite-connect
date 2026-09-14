@@ -27,9 +27,10 @@ const PROGRAMMES_MODULE = MODULE_MAP["programmes"]!;
 const PARTENAIRES_MODULE = MODULE_MAP["partenaires"]!;
 const EMPLOYES_MODULE = MODULE_MAP["employes"]!;
 
-export function ProjectManagementView({ initialTab = "programmes" }: { initialTab?: string }) {
+export function ProjectManagementView({ initialTab = "programmes", allowedTabs = PROJECT_TABS.map((tab) => tab.slug) }: { initialTab?: string; allowedTabs?: string[] }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
+  const visibleTabs = PROJECT_TABS.filter((tab) => allowedTabs.includes(tab.slug));
 
   return (
     <div className="space-y-6">
@@ -43,15 +44,15 @@ export function ProjectManagementView({ initialTab = "programmes" }: { initialTa
       </header>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-auto w-full justify-start overflow-x-auto sm:w-auto">
-          {PROJECT_TABS.map((tab) => <TabsTrigger key={tab.slug} value={tab.slug}>{tab.label}</TabsTrigger>)}
+          {visibleTabs.map((tab) => <TabsTrigger key={tab.slug} value={tab.slug}>{tab.label}</TabsTrigger>)}
         </TabsList>
-        <TabsContent value="programmes" className="mt-6">
+        {allowedTabs.includes("programmes") ? <TabsContent value="programmes" className="mt-6">
           <ResourceView mod={PROGRAMMES_MODULE} compactHeading />
-        </TabsContent>
-        <TabsContent value="partenaires" className="mt-6">
+        </TabsContent> : null}
+        {allowedTabs.includes("partenaires") ? <TabsContent value="partenaires" className="mt-6">
           <ResourceView mod={PARTENAIRES_MODULE} compactHeading />
-        </TabsContent>
-        <TabsContent value="projets" className="mt-6"><ProjectsPanel /></TabsContent>
+        </TabsContent> : null}
+        {allowedTabs.includes("projets") ? <TabsContent value="projets" className="mt-6"><ProjectsPanel /></TabsContent> : null}
       </Tabs>
     </div>
   );

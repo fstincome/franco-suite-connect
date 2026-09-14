@@ -16,6 +16,7 @@ unique permettant de préserver les anciennes clés et relations.
 - [x] Analyse de l'archive et cartographie des modules
 - [x] Activation de Lovable Cloud
 - [x] Schéma relationnel (RH, données, stock, charroi, communauté, mobile money, projets, suivi, archives)
+- [x] Projets & partenariats regroupés : programmes, partenaires, projets, participants, activités et budget restant automatique
 - [x] RLS + rôles (`admin`, `gestionnaire`, `agent`), profils auto-créés
 - [x] Registre de modules et pages CRUD génériques
 - [x] Écran de connexion, coquille applicative, navigation latérale par groupes

@@ -25,5 +25,5 @@ function ProjectsPage() {
   const { slugs, isLoading } = useMyAccess();
   const available = ["programmes", "partenaires", "projets"].filter((slug) => slugs.has(slug));
   const active = available.includes(onglet) ? onglet : available[0];
-  return <AppShell>{isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : active ? <ProjectManagementView initialTab={active} /> : <div className="rounded-lg border p-6"><h1 className="text-lg font-semibold">Rubrique non accessible</h1><p className="mt-2 text-sm text-muted-foreground">Demandez l’accès à Projets & partenariats à l’administrateur.</p></div>}</AppShell>;
+  return <AppShell>{isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : active ? <ProjectManagementView initialTab={active} allowedTabs={available} /> : <div className="rounded-lg border p-6"><h1 className="text-lg font-semibold">Rubrique non accessible</h1><p className="mt-2 text-sm text-muted-foreground">Demandez l’accès à Projets & partenariats à l’administrateur.</p></div>}</AppShell>;
 }
