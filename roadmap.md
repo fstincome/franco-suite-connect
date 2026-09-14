@@ -46,3 +46,5 @@ unique permettant de préserver les anciennes clés et relations.
 - [x] Documents RH privés limités à 5 Mo et création sécurisée des comptes employés par l'admin.
 - [x] Archives et Planification séparées selon le type source, avec dossiers, auteurs,
       fichiers privés et 13 enregistrements réels importés depuis le dump.
+- [x] Paie séparée des fiches Employés : paramétrage, calcul détaillé automatique,
+      fiches mensuelles, circuit de validation et données réelles du dump.
