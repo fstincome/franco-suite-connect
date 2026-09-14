@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { KeyRound, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { FileText, FolderOpen, KeyRound, Pencil, Plus, Power, Search, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { Field, ModuleDef } from "@/lib/modules";
@@ -7,6 +7,7 @@ import { MODULE_MAP } from "@/lib/modules";
 import { ACCOUNT_LEVELS, createEntityAccount, type AccountLevel } from "@/lib/entity-accounts.functions";
 import { useMyAccess } from "@/lib/access";
 import { formatValue, rowLabel, useDeleteRow, useRows, useSaveRow, type Row } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<Row>({});
+  const [files, setFiles] = useState<Record<string, File | null>>({});
 
   function openForm(row: Row) {
     const next: Row = { ...row };
@@ -55,6 +57,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     }
     setEditing(row);
     setForm(next);
+    setFiles({});
   }
   function setField(name: string, value: unknown) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -146,6 +149,10 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     for (const f of mod.fields) {
       const raw = form[f.name];
       const s = typeof raw === "string" ? raw.trim() : raw == null ? "" : String(raw);
+      if (f.type === "file") {
+        values[f.name] = s === "" ? null : s;
+        continue;
+      }
       values[f.name] = f.type === "number" ? (s === "" ? 0 : Number(s)) : s === "" ? null : s;
       if (f.required && (values[f.name] === null || values[f.name] === "")) {
         toast.error(`Le champ « ${f.label} » est obligatoire.`);
@@ -154,11 +161,48 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     }
     if (editing?.["id"]) values["id"] = editing["id"];
     try {
+      for (const f of mod.fields.filter((field) => field.type === "file")) {
+        const file = files[f.name];
+        if (!file) continue;
+        if (file.size > 5 * 1024 * 1024) throw new Error(`${f.label} dépasse la limite de 5 Mo.`);
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const path = `${editing?.["id"] ?? crypto.randomUUID()}/${f.name}/${Date.now()}-${safeName}`;
+        const { error } = await supabase.storage.from("documents-employes").upload(path, file, {
+          upsert: false,
+        });
+        if (error) throw error;
+        values[f.name] = path;
+      }
       await save.mutateAsync(values);
       toast.success(editing?.["id"] ? "Enregistrement mis à jour." : `${mod.singular} ajouté.`);
       setEditing(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Échec de l'enregistrement.");
+    }
+  }
+
+  async function openDocument(path: unknown) {
+    if (typeof path !== "string" || !path) return;
+    if (path.startsWith("legacy/")) {
+      toast.info("La référence existe dans le dump, mais le fichier source n'était pas dans l'archive.");
+      return;
+    }
+    const { data, error } = await supabase.storage
+      .from("documents-employes")
+      .createSignedUrl(path, 60);
+    if (error) {
+      toast.error("Document inaccessible.");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function toggleEmployee(row: Row) {
+    try {
+      await save.mutateAsync({ ...row, statut: row["statut"] === "Inactif" ? "Disponible" : "Inactif" });
+      toast.success(row["statut"] === "Inactif" ? "Employé réactivé." : "Employé désactivé.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Modification impossible.");
     }
   }
 
@@ -230,6 +274,16 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                       </TableCell>
                     ))}
                     <TableCell className="text-right whitespace-nowrap">
+                      {mod.slug === "employes" && row["contrat_path"] ? (
+                        <Button variant="ghost" size="icon" title="Consulter le contrat" onClick={() => openDocument(row["contrat_path"])}>
+                          <FileText className="size-4" />
+                        </Button>
+                      ) : null}
+                      {mod.slug === "employes" && row["dossier_path"] ? (
+                        <Button variant="ghost" size="icon" title="Consulter le dossier administratif" onClick={() => openDocument(row["dossier_path"])}>
+                          <FolderOpen className="size-4" />
+                        </Button>
+                      ) : null}
                       {canCreateAccount ? (
                         <Button
                           variant="ghost"
@@ -247,7 +301,13 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                         <Pencil className="size-4" />
                       </Button>
 
-                      <Button
+                      {mod.slug === "employes" ? (
+                        <Button variant="ghost" size="icon" title={row["statut"] === "Inactif" ? "Réactiver" : "Désactiver"} onClick={() => toggleEmployee(row)}>
+                          <Power className={row["statut"] === "Inactif" ? "size-4 text-muted-foreground" : "size-4 text-destructive"} />
+                        </Button>
+                      ) : null}
+
+                      {mod.slug !== "employes" ? <Button
                         variant="ghost"
                         size="icon"
                         onClick={async () => {
@@ -264,7 +324,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                         }}
                       >
                         <Trash2 className="size-4 text-destructive" />
-                      </Button>
+                      </Button> : null}
                     </TableCell>
                   </TableRow>
                 ))
@@ -283,26 +343,31 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
             <DialogDescription>{mod.description}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-            {mod.fields.map((f) => (
-              <FieldInput
-                key={f.name}
-                field={f}
-                value={form[f.name] ?? ""}
-                onChange={(v) => {
-                  setField(f.name, v);
-                  // Un changement d'entité mère réinitialise les champs hérités.
-                  mod.fields
-                    .filter((c) => c.filterBy?.field === f.name)
-                    .forEach((c) => setField(c.name, ""));
-                }}
-                options={optionsFor(f)}
-                hint={
-                  f.filterBy && !form[f.filterBy.field]
-                    ? `Sélectionnez d'abord « ${mod.fields.find((x) => x.name === f.filterBy!.field)?.label ?? ""} ».`
-                    : undefined
-                }
-              />
-            ))}
+            {mod.fields.map((f, index) => {
+              const showSection = f.section && f.section !== mod.fields[index - 1]?.section;
+              return (
+                <div key={f.name} className="contents">
+                  {showSection ? <h3 className="border-b pb-2 pt-2 text-sm font-semibold text-foreground sm:col-span-2">{f.section}</h3> : null}
+                  <FieldInput
+                    field={f}
+                    value={form[f.name] ?? ""}
+                    onChange={(v) => {
+                      setField(f.name, v);
+                      mod.fields
+                        .filter((c) => c.filterBy?.field === f.name)
+                        .forEach((c) => setField(c.name, ""));
+                    }}
+                    onFileChange={(file) => setFiles((current) => ({ ...current, [f.name]: file }))}
+                    options={optionsFor(f)}
+                    hint={
+                      f.filterBy && !form[f.filterBy.field]
+                        ? `Sélectionnez d'abord « ${mod.fields.find((x) => x.name === f.filterBy!.field)?.label ?? ""} ».`
+                        : f.type === "file" ? "PDF, image ou document bureautique — 5 Mo maximum." : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                 Annuler
@@ -322,12 +387,14 @@ function FieldInput({
   field,
   value: rawValue,
   onChange,
+  onFileChange,
   options,
   hint,
 }: {
   field: Field;
   value: unknown;
   onChange: (value: string) => void;
+  onFileChange?: (file: File | null) => void;
   options: Row[];
   hint?: string | undefined;
 }) {
@@ -340,7 +407,17 @@ function FieldInput({
         {field.label}
         {field.required ? " *" : ""}
       </Label>
-      {field.type === "textarea" ? (
+      {field.type === "file" ? (
+        <div className="space-y-2">
+          <Input
+            id={field.name}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.bmp,.doc,.docx,.xls,.xlsx"
+            onChange={(e) => onFileChange?.(e.target.files?.[0] ?? null)}
+          />
+          {value ? <p className="truncate text-xs text-muted-foreground">Document actuel : {value.split("/").at(-1)}</p> : null}
+        </div>
+      ) : field.type === "textarea" ? (
         <Textarea
           id={field.name}
           value={value}

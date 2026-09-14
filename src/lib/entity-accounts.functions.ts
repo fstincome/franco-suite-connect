@@ -38,11 +38,22 @@ export const createEntityAccount = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: row, error: rowError } = await supabaseAdmin
-      .from(data.level)
-      .select(data.level === "employes" ? "id, nom, prenom, email, user_id" : "id, nom, email, user_id")
-      .eq("id", data.id)
-      .maybeSingle();
+    const employeeResult = data.level === "employes"
+      ? await supabaseAdmin
+          .from("employes")
+          .select("id, nom, prenom, email, user_id")
+          .eq("id", data.id)
+          .maybeSingle()
+      : null;
+    const entityResult = data.level !== "employes"
+      ? await supabaseAdmin
+          .from(data.level)
+          .select("id, nom, email, user_id")
+          .eq("id", data.id)
+          .maybeSingle()
+      : null;
+    const row = employeeResult?.data ?? entityResult?.data;
+    const rowError = employeeResult?.error ?? entityResult?.error;
     if (rowError) throw new Error(rowError.message);
     if (!row) throw new Error("Fiche introuvable.");
     const email = (row as { email: string | null }).email?.trim();
