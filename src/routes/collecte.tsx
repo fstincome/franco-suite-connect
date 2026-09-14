@@ -32,9 +32,6 @@ type GeoRow = {
   province_id?: string | null;
   commune_id?: string | null;
   zone_id?: string | null;
-  federation_id?: string | null;
-  union_id?: string | null;
-  cooperative_id?: string | null;
 };
 
 const EMPTY = {
@@ -44,10 +41,10 @@ const EMPTY = {
   commune_id: "",
   zone_id: "",
   colline_id: "",
-  federation_id: "",
-  union_id: "",
-  cooperative_id: "",
-  association_id: "",
+  federation: "",
+  union_nom: "",
+  cooperative: "",
+  association: "",
   telephone: "",
   date_adhesion: "",
 };
@@ -77,18 +74,13 @@ function CollectePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["collecte-geo"],
     queryFn: async () => {
-      const [provinces, communes, zones, collines, federations, unions, cooperatives, associations] =
-        await Promise.all([
-          fetchTable("provinces"),
-          fetchTable("communes"),
-          fetchTable("zones"),
-          fetchTable("collines"),
-          fetchTable("federations"),
-          fetchTable("unions"),
-          fetchTable("cooperatives"),
-          fetchTable("associations"),
-        ]);
-      return { provinces, communes, zones, collines, federations, unions, cooperatives, associations };
+      const [provinces, communes, zones, collines] = await Promise.all([
+        fetchTable("provinces"),
+        fetchTable("communes"),
+        fetchTable("zones"),
+        fetchTable("collines"),
+      ]);
+      return { provinces, communes, zones, collines };
     },
   });
 
@@ -105,37 +97,14 @@ function CollectePage() {
     () => (d?.collines ?? []).filter((r) => !form.zone_id || r.zone_id === form.zone_id),
     [d, form.zone_id],
   );
-  const federations = useMemo(
-    () => (d?.federations ?? []).filter((r) => !form.province_id || r.province_id === form.province_id),
-    [d, form.province_id],
-  );
-  const unions = useMemo(
-    () => (d?.unions ?? []).filter((r) => !form.federation_id || r.federation_id === form.federation_id),
-    [d, form.federation_id],
-  );
-  const cooperatives = useMemo(
-    () => (d?.cooperatives ?? []).filter((r) => !form.union_id || r.union_id === form.union_id),
-    [d, form.union_id],
-  );
-  const associations = useMemo(
-    () =>
-      (d?.associations ?? []).filter((r) => !form.cooperative_id || r.cooperative_id === form.cooperative_id),
-    [d, form.cooperative_id],
-  );
 
   function setField(name: keyof typeof EMPTY, value: string) {
     setForm((f) => {
       const next = { ...f, [name]: value };
       // Réinitialise les niveaux enfants quand un parent change
-      if (name === "province_id") {
-        next.commune_id = next.zone_id = next.colline_id = "";
-        next.federation_id = next.union_id = next.cooperative_id = next.association_id = "";
-      }
+      if (name === "province_id") next.commune_id = next.zone_id = next.colline_id = "";
       if (name === "commune_id") next.zone_id = next.colline_id = "";
       if (name === "zone_id") next.colline_id = "";
-      if (name === "federation_id") next.union_id = next.cooperative_id = next.association_id = "";
-      if (name === "union_id") next.cooperative_id = next.association_id = "";
-      if (name === "cooperative_id") next.association_id = "";
       return next;
     });
   }
@@ -157,10 +126,10 @@ function CollectePage() {
       commune: nameOf(d?.communes, form.commune_id),
       zone: nameOf(d?.zones, form.zone_id),
       colline: nameOf(d?.collines, form.colline_id),
-      federation: nameOf(d?.federations, form.federation_id),
-      union_nom: nameOf(d?.unions, form.union_id),
-      cooperative: nameOf(d?.cooperatives, form.cooperative_id),
-      association: nameOf(d?.associations, form.association_id),
+      federation: form.federation.trim() || null,
+      union_nom: form.union_nom.trim() || null,
+      cooperative: form.cooperative.trim() || null,
+      association: form.association.trim() || null,
       telephone: form.telephone.trim() || null,
       date_adhesion: form.date_adhesion || null,
     };
@@ -209,8 +178,8 @@ function CollectePage() {
             <div>
               <CardTitle>Fiche de collecte terrain</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Renseignez les informations du membre et de son organisation. Les champs dépendants se
-                débloquent au fur et à mesure.
+                Renseignez les informations du membre et de son organisation. La localisation se
+                choisit dans les listes ; les organisations se saisissent librement.
               </p>
             </div>
           </div>
@@ -266,34 +235,38 @@ function CollectePage() {
                 disabled={!form.zone_id}
               />
 
-              <SelectField
-                label="Fédération"
-                value={form.federation_id}
-                onChange={(v) => setField("federation_id", v)}
-                options={federations}
-                disabled={!form.province_id}
-              />
-              <SelectField
-                label="Union"
-                value={form.union_id}
-                onChange={(v) => setField("union_id", v)}
-                options={unions}
-                disabled={!form.federation_id}
-              />
-              <SelectField
-                label="Coopérative"
-                value={form.cooperative_id}
-                onChange={(v) => setField("cooperative_id", v)}
-                options={cooperatives}
-                disabled={!form.union_id}
-              />
-              <SelectField
-                label="Association"
-                value={form.association_id}
-                onChange={(v) => setField("association_id", v)}
-                options={associations}
-                disabled={!form.cooperative_id}
-              />
+              <Field label="Fédération">
+                <Input
+                  value={form.federation}
+                  onChange={(e) => setField("federation", e.target.value)}
+                  maxLength={150}
+                  placeholder="Nom de la fédération"
+                />
+              </Field>
+              <Field label="Union">
+                <Input
+                  value={form.union_nom}
+                  onChange={(e) => setField("union_nom", e.target.value)}
+                  maxLength={150}
+                  placeholder="Nom de l'union"
+                />
+              </Field>
+              <Field label="Coopérative">
+                <Input
+                  value={form.cooperative}
+                  onChange={(e) => setField("cooperative", e.target.value)}
+                  maxLength={150}
+                  placeholder="Nom de la coopérative"
+                />
+              </Field>
+              <Field label="Association">
+                <Input
+                  value={form.association}
+                  onChange={(e) => setField("association", e.target.value)}
+                  maxLength={150}
+                  placeholder="Nom de l'association"
+                />
+              </Field>
 
               <Field label="Téléphone">
                 <Input
