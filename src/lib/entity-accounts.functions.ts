@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Niveaux communautaires pouvant disposer d'un compte de connexion (pas les membres). */
-export const ACCOUNT_LEVELS = ["federations", "unions", "cooperatives", "associations"] as const;
+export const ACCOUNT_LEVELS = ["federations", "unions", "cooperatives", "associations", "employes"] as const;
 export type AccountLevel = (typeof ACCOUNT_LEVELS)[number];
 
 /** Onglets accordés à l'entité : son niveau et les niveaux inférieurs. */
@@ -38,11 +38,22 @@ export const createEntityAccount = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: row, error: rowError } = await supabaseAdmin
-      .from(data.level)
-      .select("id, nom, email, user_id")
-      .eq("id", data.id)
-      .maybeSingle();
+    const employeeResult = data.level === "employes"
+      ? await supabaseAdmin
+          .from("employes")
+          .select("id, nom, prenom, email, user_id")
+          .eq("id", data.id)
+          .maybeSingle()
+      : null;
+    const entityResult = data.level !== "employes"
+      ? await supabaseAdmin
+          .from(data.level)
+          .select("id, nom, email, user_id")
+          .eq("id", data.id)
+          .maybeSingle()
+      : null;
+    const row = employeeResult?.data ?? entityResult?.data;
+    const rowError = employeeResult?.error ?? entityResult?.error;
     if (rowError) throw new Error(rowError.message);
     if (!row) throw new Error("Fiche introuvable.");
     const email = (row as { email: string | null }).email?.trim();
@@ -58,26 +69,46 @@ export const createEntityAccount = createServerFn({ method: "POST" })
       email,
       password,
       email_confirm: true,
-      user_metadata: { nom_complet: (row as { nom: string }).nom, niveau: data.level },
+      user_metadata: {
+        nom_complet: [(row as { nom: string }).nom, (row as { prenom?: string | null }).prenom]
+          .filter(Boolean)
+          .join(" "),
+        niveau: data.level,
+      },
     });
-    if (createError || !created.user) {
-      throw new Error(createError?.message ?? "Création du compte impossible.");
+    let userId = created.user?.id;
+    let linkedExisting = false;
+    if (createError || !userId) {
+      const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const existing = users.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
+      if (listError || !existing) {
+        throw new Error(createError?.message ?? listError?.message ?? "Création du compte impossible.");
+      }
+      userId = existing.id;
+      linkedExisting = true;
     }
-    const userId = created.user.id;
 
     const start = LEVEL_CHAIN.indexOf(data.level as (typeof LEVEL_CHAIN)[number]);
-    const slugs = LEVEL_CHAIN.slice(start);
-    await supabaseAdmin
+    const slugs = data.level === "employes"
+      ? ["employes", "conges", "presences", "salaires"]
+      : LEVEL_CHAIN.slice(start);
+    const { error: accessError } = await supabaseAdmin
       .from("user_module_access")
       .upsert(
         slugs.map((slug) => ({ user_id: userId, module_slug: slug })),
         { onConflict: "user_id,module_slug" },
       );
+    if (accessError) throw new Error(accessError.message);
     const { error: linkError } = await supabaseAdmin
       .from(data.level)
       .update({ user_id: userId })
       .eq("id", data.id);
     if (linkError) throw new Error(linkError.message);
 
-    return { status: "created" as const, email, password };
+    return linkedExisting
+      ? { status: "linked" as const, email, password: null }
+      : { status: "created" as const, email, password };
   });
