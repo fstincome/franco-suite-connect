@@ -710,6 +710,8 @@ export const MODULES: ModuleDef[] = [
       { name: "objet_collaboration", label: "Objet de collaboration", type: "textarea", list: true, required: true },
       { name: "logo_path", label: "Logo", type: "file", list: true },
     ],
+    storageBucket: "documents-projets",
+    fileSizeLimitMb: 20,
   },
   {
     slug: "projets",
