@@ -97,8 +97,24 @@ function ModuleGrid({
                 </div>
               </div>
             ) : null}
+            {group === "Finances & suivi" ? (
+              <div className="space-y-2 rounded-md border p-3 sm:col-span-2 lg:col-span-3">
+                <p className="text-sm font-medium">Livre de banque</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {modulesOfGroup(group).filter((m) => BANK_SLUGS.has(m.slug)).map((m) => (
+                    <label key={m.slug} className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm">
+                      <Checkbox checked={granted.includes(m.slug)} onCheckedChange={(v) => onToggle(m.slug, v === true)} />
+                      <span>{m.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {modulesOfGroup(group)
-              .filter((m) => !STRUCTURE_SLUGS.has(m.slug) && !PROJECT_SLUGS.has(m.slug))
+              .filter(
+                (m) =>
+                  !STRUCTURE_SLUGS.has(m.slug) && !PROJECT_SLUGS.has(m.slug) && !BANK_SLUGS.has(m.slug),
+              )
               .map((m) => (
                 <label
                   key={m.slug}
