@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CollecteRouteImport } from './routes/collecte'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProjetsPartenariatsRouteImport } from './routes/projets-partenariats'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollecteRoute = CollecteRouteImport.update({
+  id: '/collecte',
+  path: '/collecte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuideRoute = GuideRouteImport.update({
@@ -74,6 +80,7 @@ const MModuleRoute = MModuleRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
   '/projets-partenariats': typeof ProjetsPartenariatsRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
   '/projets-partenariats': typeof ProjetsPartenariatsRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
   '/projets-partenariats': typeof ProjetsPartenariatsRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/collecte'
     | '/guide'
     | '/parametres'
     | '/projets-partenariats'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/collecte'
     | '/guide'
     | '/parametres'
     | '/projets-partenariats'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/collecte'
     | '/guide'
     | '/parametres'
     | '/projets-partenariats'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  CollecteRoute: typeof CollecteRoute
   GuideRoute: typeof GuideRoute
   ParametresRoute: typeof ParametresRoute
   ProjetsPartenariatsRoute: typeof ProjetsPartenariatsRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collecte': {
+      id: '/collecte'
+      path: '/collecte'
+      fullPath: '/collecte'
+      preLoaderRoute: typeof CollecteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guide': {
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  CollecteRoute: CollecteRoute,
   GuideRoute: GuideRoute,
   ParametresRoute: ParametresRoute,
   ProjetsPartenariatsRoute: ProjetsPartenariatsRoute,
