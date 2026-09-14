@@ -46,7 +46,7 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "departements",
     table: "departements",
-    title: "1. Départements",
+    title: "Départements",
     singular: "Département",
     description: "Niveau 1 de la structure : les grands départements de l'organisation.",
     group: "Administration / RH",
@@ -61,7 +61,7 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "fonctions",
     table: "fonctions",
-    title: "2. Fonctions",
+    title: "Fonctions",
     singular: "Fonction",
     description: "Niveau 2 : une fonction appartient à un département.",
     group: "Administration / RH",
@@ -83,7 +83,7 @@ export const MODULES: ModuleDef[] = [
   {
     slug: "profils",
     table: "profils",
-    title: "3. Profils",
+    title: "Profils",
     singular: "Profil",
     description:
       "Niveau 3 : un profil appartient à une fonction (exemple : Administration > Finances > Comptable).",

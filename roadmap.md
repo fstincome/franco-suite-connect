@@ -53,3 +53,5 @@ unique permettant de préserver les anciennes clés et relations.
 - [x] Gestion des profils : Départements → Fonctions → Profils (listes dédiées) et
       affectation en cascade dans la fiche Employé, en remplacement des anciennes
       listes Service et Profil.
+- [x] Départements, Fonctions et Profils regroupés sur une seule page à onglets,
+      avec une seule entrée dans le menu et maintien des droits séparés.
