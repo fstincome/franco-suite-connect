@@ -29,12 +29,13 @@ export const createEntityAccount = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: roleRows, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin");
     if (roleError) throw new Error(roleError.message);
-    if (!isAdmin) throw new Error("Seul un administrateur peut créer un accès.");
+    if (!roleRows?.length) throw new Error("Seul un administrateur peut créer un accès.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

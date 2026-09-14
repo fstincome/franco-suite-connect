@@ -2,6 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ResourceView } from "@/components/ResourceView";
+import { PayrollView } from "@/components/PayrollView";
 import { MODULE_MAP, ORG_NAME } from "@/lib/modules";
 import { useMyAccess } from "@/lib/access";
 
@@ -53,7 +54,7 @@ function ModulePage() {
       {isLoading ? (
         <p className="text-muted-foreground text-sm">Chargement…</p>
       ) : (
-        <ResourceView mod={mod} />
+        slug === "salaires" ? <PayrollView /> : <ResourceView mod={mod} />
       )}
     </AppShell>
   );

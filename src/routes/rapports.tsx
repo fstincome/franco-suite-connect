@@ -40,9 +40,11 @@ function Rapports() {
   const { data } = useQuery({
     queryKey: ["rapports"],
     queryFn: async () => {
-      const [budgets, employes, carburant, membres, projets] = await Promise.all([
+      const [budgets, employes, salaires, detailsPaie, carburant, membres, projets] = await Promise.all([
         supabase.from("budgets").select("intitule, exercice, montant_prevu, montant_realise"),
-        supabase.from("employes").select("service, statut, salaire_base"),
+        supabase.from("employes").select("id, service, statut"),
+        supabase.from("salaires").select("employe_id"),
+        supabase.from("details_paie").select("employe_id, salaire_net"),
         supabase.from("carburant").select("litres, prix_total"),
         supabase.from("membres").select("sexe"),
         supabase.from("projets").select("titre, budget, avancement, statut"),
@@ -50,6 +52,8 @@ function Rapports() {
       return {
         budgets: budgets.data ?? [],
         employes: employes.data ?? [],
+        salaires: salaires.data ?? [],
+        detailsPaie: detailsPaie.data ?? [],
         carburant: carburant.data ?? [],
         membres: membres.data ?? [],
         projets: projets.data ?? [],
@@ -58,12 +62,13 @@ function Rapports() {
   });
 
   const employes = data?.employes ?? [];
+  const netParEmploye = new Map((data?.detailsPaie ?? []).map((d) => [d.employe_id, Number(d.salaire_net)]));
   const parService = Object.entries(
     employes.reduce<Record<string, { n: number; masse: number }>>((acc, e) => {
       const key = e.service || "Non affecté";
       acc[key] = {
         n: (acc[key]?.n ?? 0) + 1,
-        masse: (acc[key]?.masse ?? 0) + Number(e.salaire_base ?? 0),
+        masse: (acc[key]?.masse ?? 0) + (netParEmploye.get(e.id) ?? 0),
       };
       return acc;
     }, {}),
@@ -91,8 +96,8 @@ function Rapports() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Stat label="Effectif total" value={String(employes.length)} />
           <Stat
-            label="Masse salariale de base"
-            value={formatMoney(employes.reduce((s, e) => s + Number(e.salaire_base ?? 0), 0))}
+            label="Salaires nets à payer"
+            value={formatMoney((data?.detailsPaie ?? []).reduce((s, d) => s + Number(d.salaire_net ?? 0), 0))}
           />
           <Stat label="Carburant consommé" value={`${formatNumber(litres)} L`} />
           <Stat label="Coût carburant" value={formatMoney(coutCarburant)} />
@@ -109,7 +114,7 @@ function Rapports() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Effectifs et masse salariale par service</CardTitle>
+            <CardTitle className="text-base">Effectifs et salaires nets par service</CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <div className="overflow-x-auto">
@@ -118,7 +123,7 @@ function Rapports() {
                   <TableRow>
                     <TableHead>Service</TableHead>
                     <TableHead className="text-right">Effectif</TableHead>
-                    <TableHead className="text-right">Masse salariale</TableHead>
+                    <TableHead className="text-right">Salaires nets</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
