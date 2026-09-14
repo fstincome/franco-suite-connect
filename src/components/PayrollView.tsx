@@ -227,8 +227,9 @@ function PdfPreview({ url }: { url: string }) {
           container.appendChild(canvas);
           await page.render({ canvas, canvasContext: context, viewport }).promise;
         }
-      } catch {
-        if (!cancelled) setError("Le document n’a pas pu être affiché. Vous pouvez toujours le télécharger.");
+      } catch (renderError) {
+        const detail = renderError instanceof Error ? renderError.message : "Erreur inconnue";
+        if (!cancelled) setError(`Le document n’a pas pu être affiché (${detail}). Vous pouvez toujours le télécharger.`);
       }
     })();
     return () => { cancelled = true; };
