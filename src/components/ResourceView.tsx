@@ -50,7 +50,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   function openForm(row: Row) {
     const next: Row = { ...row };
     // Valeurs par défaut pour une nouvelle fiche (évite les champs obligatoires vides).
-    for (const f of mod.fields) {
+    for (const f of mod.fields.filter((field) => field.form !== false)) {
       if (next[f.name] !== undefined && next[f.name] !== null) continue;
       if (f.type === "select" && f.options?.length) next[f.name] = f.options[0];
       else if (f.type === "number") next[f.name] = 0;
@@ -148,11 +148,15 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const values: Row = {};
-    for (const f of mod.fields) {
+    for (const f of mod.fields.filter((field) => field.form !== false)) {
       const raw = form[f.name];
       const s = typeof raw === "string" ? raw.trim() : raw == null ? "" : String(raw);
       if (f.type === "file") {
         values[f.name] = s === "" ? null : s;
+        if (f.required && !values[f.name] && !files[f.name]) {
+          toast.error(`Le champ « ${f.label} » est obligatoire.`);
+          return;
+        }
         continue;
       }
       values[f.name] = f.type === "number" ? (s === "" ? 0 : Number(s)) : s === "" ? null : s;
@@ -163,13 +167,20 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
     }
     if (editing?.["id"]) values["id"] = editing["id"];
     try {
+      if (mod.slug === "archives" || mod.slug === "planifications") {
+        const { data } = await supabase.auth.getUser();
+        values["auteur_id"] = data.user?.id ?? null;
+        values["auteur_nom"] = data.user?.user_metadata?.["nom_complet"] ?? data.user?.email ?? "Utilisateur";
+        if (!editing?.["id"]) values["date_document"] = new Date().toISOString().slice(0, 10);
+      }
       for (const f of mod.fields.filter((field) => field.type === "file")) {
         const file = files[f.name];
         if (!file) continue;
-        if (file.size > 5 * 1024 * 1024) throw new Error(`${f.label} dépasse la limite de 5 Mo.`);
+        const limitMb = mod.fileSizeLimitMb ?? 5;
+        if (file.size > limitMb * 1024 * 1024) throw new Error(`${f.label} dépasse la limite de ${limitMb} Mo.`);
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
         const path = `${editing?.["id"] ?? crypto.randomUUID()}/${f.name}/${Date.now()}-${safeName}`;
-        const { error } = await supabase.storage.from("documents-employes").upload(path, file, {
+        const { error } = await supabase.storage.from(mod.storageBucket ?? "documents-employes").upload(path, file, {
           upsert: false,
         });
         if (error) throw error;
@@ -190,7 +201,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
       return;
     }
     const { data, error } = await supabase.storage
-      .from("documents-employes")
+      .from(mod.storageBucket ?? "documents-employes")
       .createSignedUrl(path, 60);
     if (error) {
       toast.error("Document inaccessible.");
@@ -286,6 +297,11 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                           <FolderOpen className="size-4" />
                         </Button>
                       ) : null}
+                      {(mod.slug === "archives" || mod.slug === "planifications") && row["fichier_path"] ? (
+                        <Button variant="ghost" size="icon" title="Consulter le document" onClick={() => openDocument(row["fichier_path"])}>
+                          <FileText className="size-4" />
+                        </Button>
+                      ) : null}
                       {canCreateAccount ? (
                         <Button
                           variant="ghost"
@@ -345,8 +361,8 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
             <DialogDescription>{mod.description}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-            {mod.fields.map((f, index) => {
-              const showSection = f.section && f.section !== mod.fields[index - 1]?.section;
+            {mod.fields.filter((field) => field.form !== false).map((f, index, formFields) => {
+              const showSection = f.section && f.section !== formFields[index - 1]?.section;
               return (
                 <div key={f.name} className="contents">
                   {showSection ? <h3 className="border-b pb-2 pt-2 text-sm font-semibold text-foreground sm:col-span-2">{f.section}</h3> : null}
@@ -364,7 +380,7 @@ export function ResourceView({ mod }: { mod: ModuleDef }) {
                     hint={
                       f.filterBy && !form[f.filterBy.field]
                         ? `Sélectionnez d'abord « ${mod.fields.find((x) => x.name === f.filterBy!.field)?.label ?? ""} ».`
-                        : f.type === "file" ? "PDF, image ou document bureautique — 5 Mo maximum." : undefined
+                        : f.type === "file" ? `PDF, image ou document bureautique — ${mod.fileSizeLimitMb ?? 5} Mo maximum.` : undefined
                     }
                   />
                 </div>

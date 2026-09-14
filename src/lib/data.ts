@@ -14,11 +14,15 @@ export function useRows(slug: string, enabled = true) {
       const page = 1000;
       const all: Row[] = [];
       for (let from = 0; from < 6000; from += page) {
-        const { data, error } = await supabase
+        let request = supabase
           .from(mod!.table as never)
           .select("*")
           .order("created_at", { ascending: false })
           .range(from, from + page - 1);
+        for (const [column, value] of Object.entries(mod!.filters ?? {})) {
+          request = request.eq(column, value);
+        }
+        const { data, error } = await request;
         if (error) throw error;
         const chunk = (data ?? []) as Row[];
         all.push(...chunk);
@@ -35,7 +39,7 @@ export function useSaveRow(slug: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (values: Row) => {
-      const { id, ...rest } = values;
+      const { id, ...rest } = { ...values, ...(mod?.fixedValues ?? {}) };
       if (id) {
         const { error } = await supabase
           .from(mod!.table as never)
