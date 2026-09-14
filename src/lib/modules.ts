@@ -27,7 +27,7 @@ export type ModuleDef = {
   group: string;
   labelField: string;
   labelField2?: string;
-  filters?: Record<string, string>;
+  filters?: Record<string, string | boolean>;
   fixedValues?: Record<string, unknown>;
   storageBucket?: string;
   fileSizeLimitMb?: number;
@@ -642,6 +642,76 @@ export const MODULES: ModuleDef[] = [
       { name: "association", label: "Association", type: "text", list: true },
       { name: "telephone", label: "Téléphone", type: "text", list: true },
       { name: "date_adhesion", label: "Date d'adhésion", type: "date", list: true },
+    ],
+  },
+
+  {
+    slug: "imputations",
+    table: "imputations",
+    title: "Imputations",
+    singular: "Imputation",
+    description: "Plan comptable utilisé pour imputer les versements et les retraits.",
+    group: "Finances & suivi",
+    labelField: "code",
+    labelField2: "description",
+    fields: [
+      { name: "code", label: "Code", type: "text", list: true, required: true },
+      { name: "description", label: "Libellé du compte", type: "text", list: true, required: true },
+      STATUT(["Actif", "Inactif"]),
+    ],
+  },
+  {
+    slug: "banque-versements",
+    table: "livre_banque",
+    title: "Versements bancaires",
+    singular: "Versement",
+    description: "Entrées enregistrées dans le livre de banque.",
+    group: "Finances & suivi",
+    labelField: "libelle",
+    filters: { est_entree: true },
+    fixedValues: { est_entree: true, credit: 0 },
+    fields: [
+      { name: "date_entree", label: "Date", type: "date", list: true, required: true },
+      { name: "nom_operant", label: "Nom et prénom de l'opérant", type: "text", list: true },
+      { name: "libelle", label: "Libellé", type: "text", list: true, required: true },
+      {
+        name: "imputation_id",
+        label: "Compte (imputation)",
+        type: "ref",
+        refModule: "imputations",
+        list: true,
+        required: true,
+      },
+      { name: "debit", label: "Montant versé", type: "number", list: true, required: true, suffix: "FBu" },
+      { name: "solde", label: "Solde", type: "number", list: true, form: false, suffix: "FBu" },
+      STATUT(["Enregistrée", "Erronée"]),
+    ],
+  },
+  {
+    slug: "banque-retraits",
+    table: "livre_banque",
+    title: "Retraits bancaires",
+    singular: "Retrait",
+    description: "Sorties enregistrées dans le livre de banque.",
+    group: "Finances & suivi",
+    labelField: "libelle",
+    filters: { est_entree: false },
+    fixedValues: { est_entree: false, debit: 0 },
+    fields: [
+      { name: "date_entree", label: "Date", type: "date", list: true, required: true },
+      { name: "nom_operant", label: "Nom et prénom de l'opérant", type: "text", list: true },
+      { name: "libelle", label: "Libellé", type: "text", list: true, required: true },
+      {
+        name: "imputation_id",
+        label: "Compte (imputation)",
+        type: "ref",
+        refModule: "imputations",
+        list: true,
+        required: true,
+      },
+      { name: "credit", label: "Montant retiré", type: "number", list: true, required: true, suffix: "FBu" },
+      { name: "solde", label: "Solde", type: "number", list: true, form: false, suffix: "FBu" },
+      STATUT(["Enregistrée", "Erronée"]),
     ],
   },
 

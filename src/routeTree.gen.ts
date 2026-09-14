@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BanqueRouteImport } from './routes/banque'
 import { Route as CollecteRouteImport } from './routes/collecte'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ParametresRouteImport } from './routes/parametres'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BanqueRoute = BanqueRouteImport.update({
+  id: '/banque',
+  path: '/banque',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollecteRoute = CollecteRouteImport.update({
@@ -80,6 +86,7 @@ const MModuleRoute = MModuleRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/banque': typeof BanqueRoute
   '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/banque': typeof BanqueRoute
   '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/banque': typeof BanqueRoute
   '/collecte': typeof CollecteRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/banque'
     | '/collecte'
     | '/guide'
     | '/parametres'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/banque'
     | '/collecte'
     | '/guide'
     | '/parametres'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/banque'
     | '/collecte'
     | '/guide'
     | '/parametres'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BanqueRoute: typeof BanqueRoute
   CollecteRoute: typeof CollecteRoute
   GuideRoute: typeof GuideRoute
   ParametresRoute: typeof ParametresRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/banque': {
+      id: '/banque'
+      path: '/banque'
+      fullPath: '/banque'
+      preLoaderRoute: typeof BanqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collecte': {
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BanqueRoute: BanqueRoute,
   CollecteRoute: CollecteRoute,
   GuideRoute: GuideRoute,
   ParametresRoute: ParametresRoute,
