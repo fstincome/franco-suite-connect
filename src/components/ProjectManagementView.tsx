@@ -23,6 +23,14 @@ const PROJECT_TABS = [
   { slug: "projets", label: "Projets" },
 ] as const;
 
+const PROGRAMMES_MODULE = MODULE_MAP["programmes"];
+const PARTENAIRES_MODULE = MODULE_MAP["partenaires"];
+const EMPLOYES_MODULE = MODULE_MAP["employes"];
+
+if (!PROGRAMMES_MODULE || !PARTENAIRES_MODULE || !EMPLOYES_MODULE) {
+  throw new Error("Configuration des projets incomplète.");
+}
+
 export function ProjectManagementView({ initialTab = "programmes" }: { initialTab?: string }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
@@ -42,10 +50,10 @@ export function ProjectManagementView({ initialTab = "programmes" }: { initialTa
           {PROJECT_TABS.map((tab) => <TabsTrigger key={tab.slug} value={tab.slug}>{tab.label}</TabsTrigger>)}
         </TabsList>
         <TabsContent value="programmes" className="mt-6">
-          <ResourceView mod={MODULE_MAP.programmes} compactHeading />
+          <ResourceView mod={PROGRAMMES_MODULE} compactHeading />
         </TabsContent>
         <TabsContent value="partenaires" className="mt-6">
-          <ResourceView mod={MODULE_MAP.partenaires} compactHeading />
+          <ResourceView mod={PARTENAIRES_MODULE} compactHeading />
         </TabsContent>
         <TabsContent value="projets" className="mt-6"><ProjectsPanel /></TabsContent>
       </Tabs>
@@ -112,10 +120,13 @@ function ProjectsPanel() {
     }
   }
 
-  async function openDocument(path: unknown) {
+  async function openDocument(path: unknown): Promise<void> {
     if (typeof path !== "string" || !path) return;
     const { data, error } = await supabase.storage.from("documents-projets").createSignedUrl(path, 120);
-    if (error) return toast.error("Document inaccessible.");
+    if (error) {
+      toast.error("Document inaccessible.");
+      return;
+    }
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
@@ -163,9 +174,9 @@ function ProjectsPanel() {
         <form onSubmit={submitProject} className="grid gap-4 sm:grid-cols-2">
           <TextField label="Nom du projet" value={form.titre} onChange={(value) => setForm((current) => ({ ...current, titre: value }))} required />
           <SelectField label="Statut" value={form.statut} onChange={(value) => setForm((current) => ({ ...current, statut: value }))} items={["À venir", "En cours", "Terminé", "Suspendu", "Clôturé"].map((value) => ({ value, label: value }))} />
-          <SelectField label="Programme" value={form.programme_id} onChange={(value) => setForm((current) => ({ ...current, programme_id: value }))} items={programmes.map((row) => ({ value: row.id, label: rowLabel(MODULE_MAP.programmes, row) }))} />
-          <SelectField label="Partenaire" value={form.partenaire_id} onChange={(value) => setForm((current) => ({ ...current, partenaire_id: value }))} items={partenaires.map((row) => ({ value: row.id, label: rowLabel(MODULE_MAP.partenaires, row) }))} />
-          <SelectField label="Chef du projet" value={form.chef_projet_id} onChange={(value) => setForm((current) => ({ ...current, chef_projet_id: value }))} items={employes.map((row) => ({ value: row.id, label: rowLabel(MODULE_MAP.employes, row) }))} />
+          <SelectField label="Programme" value={form.programme_id} onChange={(value) => setForm((current) => ({ ...current, programme_id: value }))} items={programmes.map((row) => ({ value: row.id, label: rowLabel(PROGRAMMES_MODULE, row) }))} />
+          <SelectField label="Partenaire" value={form.partenaire_id} onChange={(value) => setForm((current) => ({ ...current, partenaire_id: value }))} items={partenaires.map((row) => ({ value: row.id, label: rowLabel(PARTENAIRES_MODULE, row) }))} />
+          <SelectField label="Chef du projet" value={form.chef_projet_id} onChange={(value) => setForm((current) => ({ ...current, chef_projet_id: value }))} items={employes.map((row) => ({ value: row.id, label: rowLabel(EMPLOYES_MODULE, row) }))} />
           <TextField label="Budget initial (FBu)" type="number" value={form.budget} onChange={(value) => setForm((current) => ({ ...current, budget: Number(value) }))} required />
           <TextField label="Date de début" type="date" value={form.date_debut} onChange={(value) => setForm((current) => ({ ...current, date_debut: value }))} required />
           <TextField label="Date de fin" type="date" value={form.date_fin} onChange={(value) => setForm((current) => ({ ...current, date_fin: value }))} required />
@@ -230,16 +241,16 @@ function ProjectDetail({ project, employes, onClose }: { project: Row; employes:
     } catch (error) { toast.error(error instanceof Error ? error.message : "Ajout impossible."); }
   }
 
-  const employeeName = (id: unknown) => rowLabel(MODULE_MAP.employes, employes.find((row) => row.id === id));
+  const employeeName = (id: unknown) => rowLabel(EMPLOYES_MODULE, employes.find((row) => row.id === id));
   const activityStatus = (row: Row) => { const today = new Date().toISOString().slice(0, 10); return today < row.date_debut ? "En attente" : today > row.date_fin ? "Terminée" : "En cours"; };
 
   return <Dialog open onOpenChange={(open) => !open && onClose()}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl"><DialogHeader><DialogTitle>{project.titre}</DialogTitle><DialogDescription>{formatValue(project.date_debut)} au {formatValue(project.date_fin)} · Chef de projet : {employeeName(project.chef_projet_id)}</DialogDescription></DialogHeader>
     <div className="grid gap-3 sm:grid-cols-3"><Metric label="Budget initial" value={formatMoney(Number(project.budget ?? 0))} /><Metric label="Budget engagé" value={formatMoney(Number(project.budget ?? 0) - remaining)} /><Metric label="Budget restant" value={formatMoney(remaining)} /></div>
     <Tabs defaultValue="participants"><TabsList><TabsTrigger value="participants"><Users className="mr-2 size-4" />Participants</TabsTrigger><TabsTrigger value="activites"><CalendarDays className="mr-2 size-4" />Activités</TabsTrigger></TabsList>
-      <TabsContent value="participants" className="mt-4 space-y-4"><div className="flex flex-col gap-2 sm:flex-row"><Select value={participantId} onValueChange={setParticipantId}><SelectTrigger className="flex-1"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger><SelectContent>{employes.filter((employee) => !participants.some((item) => item.employe_id === employee.id)).map((employee) => <SelectItem key={employee.id} value={employee.id}>{rowLabel(MODULE_MAP.employes, employee)}</SelectItem>)}</SelectContent></Select><Button type="button" onClick={addParticipant}><Plus className="mr-2 size-4" />Affecter</Button></div>
+      <TabsContent value="participants" className="mt-4 space-y-4"><div className="flex flex-col gap-2 sm:flex-row"><Select value={participantId} onValueChange={setParticipantId}><SelectTrigger className="flex-1"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger><SelectContent>{employes.filter((employee) => !participants.some((item) => item.employe_id === employee.id)).map((employee) => <SelectItem key={employee.id} value={employee.id}>{rowLabel(EMPLOYES_MODULE, employee)}</SelectItem>)}</SelectContent></Select><Button type="button" onClick={addParticipant}><Plus className="mr-2 size-4" />Affecter</Button></div>
         <div className="rounded-lg border"><Table><TableHeader><TableRow><TableHead>Participant</TableHead><TableHead>Date d’attribution</TableHead><TableHead className="w-24" /></TableRow></TableHeader><TableBody>{participants.length ? participants.map((item) => <TableRow key={item.id}><TableCell>{employeeName(item.employe_id)}</TableCell><TableCell>{formatValue(String(item.date_attribution ?? "").slice(0, 10))}</TableCell><TableCell><Button variant="ghost" size="sm" onClick={() => removeParticipant(item.id)}>Retirer</Button></TableCell></TableRow>) : <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">Aucun participant affecté.</TableCell></TableRow>}</TableBody></Table></div>
       </TabsContent>
-      <TabsContent value="activites" className="mt-4 space-y-5"><form onSubmit={addActivity} className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-3"><TextField label="Activité" value={activity.activite} onChange={(value) => setActivity((current) => ({ ...current, activite: value }))} required /><SelectField label="Responsable" value={activity.responsable_id} onChange={(value) => setActivity((current) => ({ ...current, responsable_id: value }))} items={participantEmployees.map((employee) => ({ value: employee.id, label: rowLabel(MODULE_MAP.employes, employee) }))} /><TextField label="Budget alloué (FBu)" type="number" value={activity.budget} onChange={(value) => setActivity((current) => ({ ...current, budget: Number(value) }))} required /><TextField label="Date de début" type="date" value={activity.date_debut} onChange={(value) => setActivity((current) => ({ ...current, date_debut: value }))} required /><TextField label="Date de fin" type="date" value={activity.date_fin} onChange={(value) => setActivity((current) => ({ ...current, date_fin: value }))} required /><div className="space-y-2"><Label>Engagement</Label><Input type="file" onChange={(event) => setEngagement(event.target.files?.[0] ?? null)} /></div><div className="sm:col-span-2 lg:col-span-3"><Button type="submit" disabled={!participantEmployees.length}><Plus className="mr-2 size-4" />Ajouter l’activité</Button>{!participantEmployees.length ? <p className="mt-2 text-xs text-muted-foreground">Affectez d’abord un participant au projet.</p> : null}</div></form>
+      <TabsContent value="activites" className="mt-4 space-y-5"><form onSubmit={addActivity} className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-3"><TextField label="Activité" value={activity.activite} onChange={(value) => setActivity((current) => ({ ...current, activite: value }))} required /><SelectField label="Responsable" value={activity.responsable_id} onChange={(value) => setActivity((current) => ({ ...current, responsable_id: value }))} items={participantEmployees.map((employee) => ({ value: employee.id, label: rowLabel(EMPLOYES_MODULE, employee) }))} /><TextField label="Budget alloué (FBu)" type="number" value={activity.budget} onChange={(value) => setActivity((current) => ({ ...current, budget: Number(value) }))} required /><TextField label="Date de début" type="date" value={activity.date_debut} onChange={(value) => setActivity((current) => ({ ...current, date_debut: value }))} required /><TextField label="Date de fin" type="date" value={activity.date_fin} onChange={(value) => setActivity((current) => ({ ...current, date_fin: value }))} required /><div className="space-y-2"><Label>Engagement</Label><Input type="file" onChange={(event) => setEngagement(event.target.files?.[0] ?? null)} /></div><div className="sm:col-span-2 lg:col-span-3"><Button type="submit" disabled={!participantEmployees.length}><Plus className="mr-2 size-4" />Ajouter l’activité</Button>{!participantEmployees.length ? <p className="mt-2 text-xs text-muted-foreground">Affectez d’abord un participant au projet.</p> : null}</div></form>
         <div className="rounded-lg border"><Table><TableHeader><TableRow><TableHead>Activité</TableHead><TableHead>Responsable</TableHead><TableHead>Période</TableHead><TableHead>Budget</TableHead><TableHead>État</TableHead></TableRow></TableHeader><TableBody>{activities.length ? activities.map((item) => <TableRow key={item.id}><TableCell className="font-medium">{item.activite}</TableCell><TableCell>{employeeName(item.responsable_id)}</TableCell><TableCell>{formatValue(item.date_debut)} — {formatValue(item.date_fin)}</TableCell><TableCell>{formatMoney(Number(item.budget ?? 0))}</TableCell><TableCell><Badge variant="outline">{activityStatus(item)}</Badge></TableCell></TableRow>) : <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">Aucune activité enregistrée.</TableCell></TableRow>}</TableBody></Table></div>
       </TabsContent>
     </Tabs>
