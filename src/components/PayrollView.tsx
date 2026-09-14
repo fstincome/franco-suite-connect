@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Eye, Plus, Search, XCircle } from "lucide-react";
+import { CheckCircle2, Download, Eye, Plus, Printer, Search, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/data";
@@ -50,6 +50,7 @@ export function PayrollView() {
   const [civil, setCivil] = useState("Célibataire");
   const [children, setChildren] = useState("0");
   const [base, setBase] = useState("0");
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string; temporary: boolean } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["payroll"],
@@ -114,13 +115,50 @@ export function PayrollView() {
     setBase(String(salary?.salaire_base ?? 0));
   }
 
-  function viewPayslip(payslip: Payslip) {
-    if (payslip.document_url) { window.open(payslip.document_url, "_blank", "noopener,noreferrer"); return; }
-    const popup = window.open("", "_blank", "noopener,noreferrer");
-    if (!popup) { toast.error("Autorisez l’ouverture de la fiche dans votre navigateur."); return; }
-    const rows = (data?.details ?? []).map((d) => `<tr><td>${employeeMap.get(d.employe_id) ?? "—"}</td><td>${formatMoney(d.salaire_brut)}</td><td>${formatMoney(d.ipr)}</td><td>${formatMoney(d.salaire_net)}</td></tr>`).join("");
-    popup.document.write(`<!doctype html><html><head><title>Fiche de paie ${payslip.mois}/${payslip.annee}</title><style>body{font-family:Arial,sans-serif;padding:36px;color:#17211b}h1{font-size:22px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px;border:1px solid #bbb;text-align:left}small{color:#667}</style></head><body><h1>CNAC MURIMA W'ISANGI</h1><h2>Fiche mensuelle de paie — ${MONTHS[payslip.mois - 1]} ${payslip.annee}</h2><small>Statut : ${payslip.statut}</small><table><thead><tr><th>Employé</th><th>Salaire brut</th><th>IPR</th><th>Net à payer</th></tr></thead><tbody>${rows}</tbody></table><script>window.print()</script></body></html>`);
-    popup.document.close();
+  async function viewPayslip(payslip: Payslip) {
+    const name = `fiche-paie-${String(payslip.mois).padStart(2, "0")}-${payslip.annee}.pdf`;
+    if (payslip.document_url) {
+      setPdfPreview({ url: payslip.document_url, name, temporary: false });
+      return;
+    }
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.text("CNAC MURIMA W'ISANGI", 14, 18);
+    pdf.setFontSize(13);
+    pdf.text(`Fiche mensuelle de paie - ${MONTHS[payslip.mois - 1] ?? payslip.mois} ${payslip.annee}`, 14, 28);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Statut : ${payslip.statut}`, 14, 35);
+    const headers = ["Employe", "Salaire brut", "IPR", "Net a payer"];
+    const widths = [76, 38, 32, 38];
+    let y = 45;
+    pdf.setFillColor(232, 238, 234);
+    pdf.rect(14, y, 184, 8, "F");
+    let x = 14;
+    pdf.setFont("helvetica", "bold");
+    headers.forEach((header, index) => { pdf.text(header, x + 2, y + 5.5); x += widths[index] ?? 0; });
+    pdf.setFont("helvetica", "normal");
+    for (const detail of data?.details ?? []) {
+      y += 8;
+      if (y > 278) { pdf.addPage(); y = 18; }
+      x = 14;
+      const values = [employeeMap.get(detail.employe_id) ?? "—", formatMoney(detail.salaire_brut), formatMoney(detail.ipr), formatMoney(detail.salaire_net)];
+      values.forEach((value, index) => { pdf.rect(x, y, widths[index] ?? 0, 8); pdf.text(String(value).slice(0, 38), x + 2, y + 5.5); x += widths[index] ?? 0; });
+    }
+    const url = URL.createObjectURL(pdf.output("blob"));
+    setPdfPreview({ url, name, temporary: true });
+  }
+
+  function closePdfPreview() {
+    if (pdfPreview?.temporary) URL.revokeObjectURL(pdfPreview.url);
+    setPdfPreview(null);
+  }
+
+  function printPdf() {
+    const frame = document.querySelector<HTMLIFrameElement>('[data-payroll-pdf="true"]');
+    frame?.contentWindow?.print();
   }
 
   return <div className="space-y-6">
@@ -148,6 +186,7 @@ export function PayrollView() {
     </Tabs>
 
     <Dialog open={editing !== undefined} onOpenChange={(open) => { if (!open) setEditing(undefined); }}><DialogContent className="sm:max-w-3xl"><DialogHeader><DialogTitle>{editing?.id ? "Modifier le salaire" : "Nouveau salaire"}</DialogTitle><DialogDescription>Les montants détaillés sont calculés automatiquement selon les règles du système source.</DialogDescription></DialogHeader><div className="grid gap-5 sm:grid-cols-2"><Field label="Employé"><Select value={employeeId} onValueChange={setEmployeeId} disabled={Boolean(editing?.id)}><SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger><SelectContent>{(data?.employees ?? []).filter((e) => editing?.employe_id === e.id || !(data?.salaries ?? []).some((s) => s.employe_id === e.id)).map((e) => <SelectItem key={e.id} value={e.id}>{e.nom} {e.prenom}</SelectItem>)}</SelectContent></Select></Field><Field label="État civil"><Select value={civil} onValueChange={setCivil}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Célibataire">Célibataire</SelectItem><SelectItem value="Marié(e)">Marié(e)</SelectItem></SelectContent></Select></Field><Field label="Nombre d’enfants"><Input type="number" min="0" max="20" value={children} onChange={(e) => setChildren(e.target.value)} /></Field><Field label="Salaire de base (FBu)"><Input type="number" min="0" value={base} onChange={(e) => setBase(e.target.value)} /></Field></div><Card className="bg-muted/40"><CardContent className="grid gap-3 pt-5 sm:grid-cols-3"><Preview label="Salaire brut" value={preview.gross} /><Preview label="IPR" value={preview.tax} /><Preview label="Net à payer" value={preview.net} /></CardContent></Card><DialogFooter><Button variant="outline" onClick={() => setEditing(undefined)}>Annuler</Button><Button disabled={!employeeId || Number(base) <= 0 || saveSalary.isPending} onClick={() => saveSalary.mutate()}>Enregistrer et calculer</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={pdfPreview !== null} onOpenChange={(open) => { if (!open) closePdfPreview(); }}><DialogContent className="flex h-[92vh] max-w-[95vw] flex-col sm:max-w-5xl"><DialogHeader><DialogTitle>Fiche mensuelle de paie</DialogTitle><DialogDescription>Consultez le document avant de l’imprimer ou de le télécharger.</DialogDescription></DialogHeader><div className="flex min-h-0 flex-1 overflow-hidden rounded-md border bg-muted"><iframe data-payroll-pdf="true" src={pdfPreview?.url} title="Aperçu PDF de la fiche mensuelle" className="h-full w-full" /></div><DialogFooter className="flex-row justify-end gap-2"><Button variant="outline" onClick={printPdf}><Printer className="mr-2 size-4" />Imprimer</Button><Button asChild><a href={pdfPreview?.url} download={pdfPreview?.name} target="_blank" rel="noreferrer"><Download className="mr-2 size-4" />Télécharger</a></Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }
 
