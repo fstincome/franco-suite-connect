@@ -3,7 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ModuleDef } from "@/lib/modules";
 import { MODULE_MAP } from "@/lib/modules";
 
-export type Row = Record<string, any>;
+export type Row = Record<string, any> & {
+  id?: any;
+  titre?: any;
+  statut?: any;
+  objectifs?: any;
+  description?: any;
+  programme_id?: any;
+  partenaire_id?: any;
+  chef_projet_id?: any;
+  fichier_path?: any;
+  budget?: any;
+  budget_depense?: any;
+  budget_restant?: any;
+  date_debut?: any;
+  date_fin?: any;
+  date_attribution?: any;
+  employe_id?: any;
+  responsable_id?: any;
+  activite?: any;
+  engagement_path?: any;
+};
 
 export function useRows(slug: string, enabled = true) {
   const mod = MODULE_MAP[slug];

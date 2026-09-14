@@ -16,6 +16,9 @@ export const Route = createFileRoute("/m/$module")({
     if (["departements", "fonctions", "profils"].includes(params.module)) {
       throw redirect({ to: "/structure-profils", search: { onglet: params.module } });
     }
+    if (["programmes", "partenaires", "projets"].includes(params.module)) {
+      throw redirect({ to: "/projets-partenariats", search: { onglet: params.module } });
+    }
   },
   head: ({ params }) => {
     const mod = MODULE_MAP[params.module];

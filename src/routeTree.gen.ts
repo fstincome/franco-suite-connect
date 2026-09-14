@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ParametresRouteImport } from './routes/parametres'
+import { Route as ProjetsPartenariatsRouteImport } from './routes/projets-partenariats'
 import { Route as RapportsRouteImport } from './routes/rapports'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as StructureProfilsRouteImport } from './routes/structure-profils'
@@ -37,6 +38,11 @@ const GuideRoute = GuideRouteImport.update({
 const ParametresRoute = ParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetsPartenariatsRoute = ProjetsPartenariatsRouteImport.update({
+  id: '/projets-partenariats',
+  path: '/projets-partenariats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RapportsRoute = RapportsRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
+  '/projets-partenariats': typeof ProjetsPartenariatsRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
   '/structure-profils': typeof StructureProfilsRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
+  '/projets-partenariats': typeof ProjetsPartenariatsRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
   '/structure-profils': typeof StructureProfilsRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
   '/parametres': typeof ParametresRoute
+  '/projets-partenariats': typeof ProjetsPartenariatsRoute
   '/rapports': typeof RapportsRoute
   '/statistiques': typeof StatistiquesRoute
   '/structure-profils': typeof StructureProfilsRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/guide'
     | '/parametres'
+    | '/projets-partenariats'
     | '/rapports'
     | '/statistiques'
     | '/structure-profils'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/guide'
     | '/parametres'
+    | '/projets-partenariats'
     | '/rapports'
     | '/statistiques'
     | '/structure-profils'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/guide'
     | '/parametres'
+    | '/projets-partenariats'
     | '/rapports'
     | '/statistiques'
     | '/structure-profils'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   GuideRoute: typeof GuideRoute
   ParametresRoute: typeof ParametresRoute
+  ProjetsPartenariatsRoute: typeof ProjetsPartenariatsRoute
   RapportsRoute: typeof RapportsRoute
   StatistiquesRoute: typeof StatistiquesRoute
   StructureProfilsRoute: typeof StructureProfilsRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/parametres'
       fullPath: '/parametres'
       preLoaderRoute: typeof ParametresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projets-partenariats': {
+      id: '/projets-partenariats'
+      path: '/projets-partenariats'
+      fullPath: '/projets-partenariats'
+      preLoaderRoute: typeof ProjetsPartenariatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rapports': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   GuideRoute: GuideRoute,
   ParametresRoute: ParametresRoute,
+  ProjetsPartenariatsRoute: ProjetsPartenariatsRoute,
   RapportsRoute: RapportsRoute,
   StatistiquesRoute: StatistiquesRoute,
   StructureProfilsRoute: StructureProfilsRoute,
