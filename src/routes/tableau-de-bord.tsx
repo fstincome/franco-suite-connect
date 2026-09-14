@@ -6,6 +6,7 @@ import {
   BarChart3,
   Boxes,
   Car,
+  ClipboardList,
   Fuel,
   PackageX,
   Wrench,
@@ -60,7 +61,7 @@ function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [articles, carburant, vehicules, entretiens] = await Promise.all([
+      const [articles, carburant, vehicules, entretiens, fiches] = await Promise.all([
         supabase
           .from("articles")
           .select("designation, quantite_stock, seuil_alerte, prix_unitaire, magasin"),
@@ -69,12 +70,14 @@ function Dashboard() {
           .from("vehicules")
           .select("id, immatriculation, marque, statut, kilometrage, chauffeur"),
         supabase.from("entretiens").select("vehicule_id, date_entretien, nature, statut, cout"),
+        (supabase.from as any)("fiches_terrain").select("province, federation"),
       ]);
       return {
         articles: (articles.data ?? []) as Article[],
         carburant: carburant.data ?? [],
         vehicules: vehicules.data ?? [],
         entretiens: entretiens.data ?? [],
+        fiches: (fiches.data ?? []) as { province: string | null; federation: string | null }[],
       };
     },
   });
