@@ -12,6 +12,7 @@ export type Field = {
   refModule?: string;
   suffix?: string;
   section?: string;
+  form?: boolean;
   /** Filtre les options par héritage : l'option doit partager la valeur `via`
    * de l'enregistrement sélectionné dans le champ `field`. */
   filterBy?: { field: string; via: string };
@@ -26,6 +27,10 @@ export type ModuleDef = {
   group: string;
   labelField: string;
   labelField2?: string;
+  filters?: Record<string, string>;
+  fixedValues?: Record<string, unknown>;
+  storageBucket?: string;
+  fileSizeLimitMb?: number;
   fields: Field[];
 };
 
@@ -688,21 +693,55 @@ export const MODULES: ModuleDef[] = [
     ],
   },
   {
+    slug: "dossiers-archives",
+    table: "dossiers_archives",
+    title: "Dossiers documentaires",
+    singular: "Dossier documentaire",
+    description: "Classement utilisé pour les archives et les documents de planification.",
+    group: "Finances & suivi",
+    labelField: "nom",
+    fields: [
+      { name: "nom", label: "Nom du dossier", type: "text", list: true, required: true },
+    ],
+  },
+  {
     slug: "archives",
     table: "archives",
     title: "Archives",
     singular: "Document archivé",
-    description: "Documents classés et leur emplacement physique.",
+    description: "Documents archivés, classés par dossier et conservés dans un espace privé.",
     group: "Finances & suivi",
     labelField: "titre",
+    filters: { type_document: "Archive" },
+    fixedValues: { type_document: "Archive" },
+    storageBucket: "documents-archives",
+    fileSizeLimitMb: 20,
     fields: [
-      { name: "titre", label: "Titre", type: "text", list: true, required: true },
-      { name: "categorie", label: "Catégorie", type: "text", list: true },
-      { name: "reference", label: "Référence", type: "text", list: true },
-      { name: "service", label: "Service", type: "text", list: true },
-      { name: "date_document", label: "Date du document", type: "date", list: true },
-      { name: "emplacement", label: "Emplacement", type: "text", list: true },
-      { name: "observation", label: "Observation", type: "textarea" },
+      { name: "dossier_id", label: "Dossier d’archive", type: "ref", refModule: "dossiers-archives", list: true, required: true },
+      { name: "titre", label: "Contenu de l’archive", type: "text", list: true, required: true },
+      { name: "auteur_nom", label: "Auteur", type: "text", list: true, form: false },
+      { name: "date_document", label: "Date", type: "date", list: true, form: false },
+      { name: "fichier_path", label: "Fichier d’archive", type: "file", required: true },
+    ],
+  },
+  {
+    slug: "planifications",
+    table: "archives",
+    title: "Planification",
+    singular: "Document de planification",
+    description: "Plans et documents de programmation classés par type de document.",
+    group: "Finances & suivi",
+    labelField: "titre",
+    filters: { type_document: "Planification" },
+    fixedValues: { type_document: "Planification" },
+    storageBucket: "documents-archives",
+    fileSizeLimitMb: 20,
+    fields: [
+      { name: "dossier_id", label: "Type de document", type: "ref", refModule: "dossiers-archives", list: true, required: true },
+      { name: "titre", label: "Titre du document", type: "text", list: true, required: true },
+      { name: "auteur_nom", label: "Auteur", type: "text", list: true, form: false },
+      { name: "date_document", label: "Date", type: "date", list: true, form: false },
+      { name: "fichier_path", label: "Fichier de planification", type: "file", required: true },
     ],
   },
 ];

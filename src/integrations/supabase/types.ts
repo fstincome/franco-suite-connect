@@ -66,45 +66,75 @@ export type Database = {
       }
       archives: {
         Row: {
+          auteur_id: string | null
+          auteur_nom: string | null
           categorie: string | null
           created_at: string
           date_document: string | null
+          dossier_id: string | null
           emplacement: string | null
+          fichier_path: string | null
           id: string
           legacy_id: string | null
           observation: string | null
           reference: string | null
           service: string | null
           titre: string
+          type_document: string
           updated_at: string
         }
         Insert: {
+          auteur_id?: string | null
+          auteur_nom?: string | null
           categorie?: string | null
           created_at?: string
           date_document?: string | null
+          dossier_id?: string | null
           emplacement?: string | null
+          fichier_path?: string | null
           id?: string
           legacy_id?: string | null
           observation?: string | null
           reference?: string | null
           service?: string | null
           titre: string
+          type_document?: string
           updated_at?: string
         }
         Update: {
+          auteur_id?: string | null
+          auteur_nom?: string | null
           categorie?: string | null
           created_at?: string
           date_document?: string | null
+          dossier_id?: string | null
           emplacement?: string | null
+          fichier_path?: string | null
           id?: string
           legacy_id?: string | null
           observation?: string | null
           reference?: string | null
           service?: string | null
           titre?: string
+          type_document?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "archives_auteur_id_fkey"
+            columns: ["auteur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "archives_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers_archives"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       articles: {
         Row: {
@@ -556,6 +586,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dossiers_archives: {
+        Row: {
+          actif: boolean
+          created_at: string
+          id: string
+          legacy_id: string | null
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       employes: {
         Row: {
