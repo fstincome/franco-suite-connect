@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Download, Eye, Plus, Printer, Search, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -50,7 +50,7 @@ export function PayrollView() {
   const [civil, setCivil] = useState("Célibataire");
   const [children, setChildren] = useState("0");
   const [base, setBase] = useState("0");
-  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string; temporary: boolean } | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["payroll"],
@@ -117,10 +117,6 @@ export function PayrollView() {
 
   async function viewPayslip(payslip: Payslip) {
     const name = `fiche-paie-${String(payslip.mois).padStart(2, "0")}-${payslip.annee}.pdf`;
-    if (payslip.document_url) {
-      setPdfPreview({ url: payslip.document_url, name, temporary: false });
-      return;
-    }
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF({ unit: "mm", format: "a4" });
     pdf.setFont("helvetica", "bold");
@@ -148,17 +144,22 @@ export function PayrollView() {
       values.forEach((value, index) => { pdf.rect(x, y, widths[index] ?? 0, 8); pdf.text(String(value).slice(0, 38), x + 2, y + 5.5); x += widths[index] ?? 0; });
     }
     const url = URL.createObjectURL(pdf.output("blob"));
-    setPdfPreview({ url, name, temporary: true });
+    setPdfPreview({ url, name });
   }
 
   function closePdfPreview() {
-    if (pdfPreview?.temporary) URL.revokeObjectURL(pdfPreview.url);
+    if (pdfPreview) URL.revokeObjectURL(pdfPreview.url);
     setPdfPreview(null);
   }
 
   function printPdf() {
-    const frame = document.querySelector<HTMLIFrameElement>('[data-payroll-pdf="true"]');
-    frame?.contentWindow?.print();
+    const pages = Array.from(document.querySelectorAll<HTMLCanvasElement>('[data-payroll-pdf-page="true"]'));
+    if (!pages.length) return;
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) { toast.error("Autorisez les fenêtres contextuelles pour imprimer la fiche."); return; }
+    const images = pages.map((page) => `<img src="${page.toDataURL("image/png")}" alt="Page de la fiche de paie">`).join("");
+    printWindow.document.write(`<html><head><title>${pdfPreview?.name ?? "Fiche de paie"}</title><style>@page{size:A4;margin:0}body{margin:0;background:#fff}img{display:block;width:210mm;height:auto;page-break-after:always}</style></head><body>${images}<script>window.onload=()=>window.print()<\/script></body></html>`);
+    printWindow.document.close();
   }
 
   return <div className="space-y-6">
@@ -186,7 +187,7 @@ export function PayrollView() {
     </Tabs>
 
     <Dialog open={editing !== undefined} onOpenChange={(open) => { if (!open) setEditing(undefined); }}><DialogContent className="sm:max-w-3xl"><DialogHeader><DialogTitle>{editing?.id ? "Modifier le salaire" : "Nouveau salaire"}</DialogTitle><DialogDescription>Les montants détaillés sont calculés automatiquement selon les règles du système source.</DialogDescription></DialogHeader><div className="grid gap-5 sm:grid-cols-2"><Field label="Employé"><Select value={employeeId} onValueChange={setEmployeeId} disabled={Boolean(editing?.id)}><SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger><SelectContent>{(data?.employees ?? []).filter((e) => editing?.employe_id === e.id || !(data?.salaries ?? []).some((s) => s.employe_id === e.id)).map((e) => <SelectItem key={e.id} value={e.id}>{e.nom} {e.prenom}</SelectItem>)}</SelectContent></Select></Field><Field label="État civil"><Select value={civil} onValueChange={setCivil}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Célibataire">Célibataire</SelectItem><SelectItem value="Marié(e)">Marié(e)</SelectItem></SelectContent></Select></Field><Field label="Nombre d’enfants"><Input type="number" min="0" max="20" value={children} onChange={(e) => setChildren(e.target.value)} /></Field><Field label="Salaire de base (FBu)"><Input type="number" min="0" value={base} onChange={(e) => setBase(e.target.value)} /></Field></div><Card className="bg-muted/40"><CardContent className="grid gap-3 pt-5 sm:grid-cols-3"><Preview label="Salaire brut" value={preview.gross} /><Preview label="IPR" value={preview.tax} /><Preview label="Net à payer" value={preview.net} /></CardContent></Card><DialogFooter><Button variant="outline" onClick={() => setEditing(undefined)}>Annuler</Button><Button disabled={!employeeId || Number(base) <= 0 || saveSalary.isPending} onClick={() => saveSalary.mutate()}>Enregistrer et calculer</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={pdfPreview !== null} onOpenChange={(open) => { if (!open) closePdfPreview(); }}><DialogContent className="flex h-[92vh] max-w-[95vw] flex-col sm:max-w-5xl"><DialogHeader><DialogTitle>Fiche mensuelle de paie</DialogTitle><DialogDescription>Consultez le document avant de l’imprimer ou de le télécharger.</DialogDescription></DialogHeader><div className="flex min-h-0 flex-1 overflow-hidden rounded-md border bg-muted"><iframe data-payroll-pdf="true" src={pdfPreview?.url} title="Aperçu PDF de la fiche mensuelle" className="h-full w-full" /></div><DialogFooter className="flex-row justify-end gap-2"><Button variant="outline" onClick={printPdf}><Printer className="mr-2 size-4" />Imprimer</Button><Button asChild><a href={pdfPreview?.url} download={pdfPreview?.name} target="_blank" rel="noreferrer"><Download className="mr-2 size-4" />Télécharger</a></Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={pdfPreview !== null} onOpenChange={(open) => { if (!open) closePdfPreview(); }}><DialogContent className="flex h-[92vh] max-w-[95vw] flex-col sm:max-w-5xl"><DialogHeader><DialogTitle>Fiche mensuelle de paie</DialogTitle><DialogDescription>Consultez le document avant de l’imprimer ou de le télécharger.</DialogDescription></DialogHeader>{pdfPreview ? <PdfPreview url={pdfPreview.url} /> : null}<DialogFooter className="flex-row justify-end gap-2"><Button variant="outline" onClick={printPdf}><Printer className="mr-2 size-4" />Imprimer</Button><Button asChild><a href={pdfPreview?.url} download={pdfPreview?.name}><Download className="mr-2 size-4" />Télécharger</a></Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }
 
@@ -195,3 +196,44 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Preview({ label, value }: { label: string; value: number }) { return <div><p className="text-xs text-muted-foreground">{label}</p><p className="font-semibold">{formatMoney(value)}</p></div>; }
 function StatusBadge({ status }: { status: string }) { return <Badge variant={status === "Payé" ? "default" : status === "Annulé" ? "destructive" : "outline"}>{status}</Badge>; }
 function DataFrame({ columns, children, loading, empty }: { columns: string[]; children: React.ReactNode; loading: boolean; empty: boolean }) { return <div className="overflow-x-auto rounded-lg border bg-card"><Table><TableHeader><TableRow>{columns.map((c) => <TableHead key={c} className="whitespace-nowrap">{c}</TableHead>)}</TableRow></TableHeader><TableBody>{loading || empty ? <TableRow><TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">{loading ? "Chargement…" : "Aucune donnée disponible."}</TableCell></TableRow> : children}</TableBody></Table></div>; }
+
+function PdfPreview({ url }: { url: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let cancelled = false;
+    container.replaceChildren();
+    setError("");
+    void (async () => {
+      try {
+        const pdfjs = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+        const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
+        const document = await pdfjs.getDocument({ data: bytes }).promise;
+        for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+          if (cancelled) return;
+          const page = await document.getPage(pageNumber);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = window.document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          if (!context) throw new Error("Aperçu indisponible");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.dataset["payrollPdfPage"] = "true";
+          canvas.className = "mx-auto block h-auto w-full max-w-[794px] bg-card shadow-sm";
+          container.appendChild(canvas);
+          await page.render({ canvas, canvasContext: context, viewport }).promise;
+        }
+      } catch (renderError) {
+        const detail = renderError instanceof Error ? renderError.message : "Erreur inconnue";
+        if (!cancelled) setError(`Le document n’a pas pu être affiché (${detail}). Vous pouvez toujours le télécharger.`);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return <div className="min-h-0 flex-1 overflow-auto rounded-md border bg-muted p-3"><div ref={containerRef} className="space-y-3" />{error ? <p className="py-12 text-center text-sm text-destructive">{error}</p> : null}</div>;
+}
