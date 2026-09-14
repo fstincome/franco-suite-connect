@@ -23,13 +23,9 @@ const PROJECT_TABS = [
   { slug: "projets", label: "Projets" },
 ] as const;
 
-const PROGRAMMES_MODULE = MODULE_MAP["programmes"];
-const PARTENAIRES_MODULE = MODULE_MAP["partenaires"];
-const EMPLOYES_MODULE = MODULE_MAP["employes"];
-
-if (!PROGRAMMES_MODULE || !PARTENAIRES_MODULE || !EMPLOYES_MODULE) {
-  throw new Error("Configuration des projets incomplète.");
-}
+const PROGRAMMES_MODULE = MODULE_MAP["programmes"]!;
+const PARTENAIRES_MODULE = MODULE_MAP["partenaires"]!;
+const EMPLOYES_MODULE = MODULE_MAP["employes"]!;
 
 export function ProjectManagementView({ initialTab = "programmes" }: { initialTab?: string }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -79,7 +75,10 @@ function ProjectsPanel() {
     return projects.filter((project) => [project.titre, project.statut, project.objectifs].some((value) => String(value ?? "").toLowerCase().includes(term)));
   }, [projects, query]);
 
-  const refName = (rows: Row[], id: unknown, slug: string) => rowLabel(MODULE_MAP[slug], rows.find((row) => row.id === id));
+  const refName = (rows: Row[], id: unknown, slug: "programmes" | "partenaires" | "employes") => {
+    const mod = MODULE_MAP[slug];
+    return mod ? rowLabel(mod, rows.find((row) => row.id === id)) : "—";
+  };
 
   function openForm(project: Row = {}) {
     setEditing(project);
@@ -204,26 +203,44 @@ function ProjectDetail({ project, employes, onClose }: { project: Row; employes:
   const participantEmployees = participants.map((item) => employes.find((employee) => employee.id === item.employe_id)).filter((item): item is Row => Boolean(item));
   const remaining = Math.max(0, Number(project.budget ?? 0) - activities.reduce((sum, item) => sum + Number(item.budget ?? 0), 0));
 
-  async function addParticipant() {
-    if (!participantId) return toast.error("Sélectionnez un participant.");
+  async function addParticipant(): Promise<void> {
+    if (!participantId) {
+      toast.error("Sélectionnez un participant.");
+      return;
+    }
     const { error } = await supabase.from("projet_participants").insert({ projet_id: project.id, employe_id: participantId });
-    if (error) return toast.error(error.code === "23505" ? "Cet employé participe déjà au projet." : error.message);
+    if (error) {
+      toast.error(error.code === "23505" ? "Cet employé participe déjà au projet." : error.message);
+      return;
+    }
     setParticipantId("");
     await queryClient.invalidateQueries({ queryKey: ["project-participants", project.id] });
     toast.success("Participant affecté.");
   }
 
-  async function removeParticipant(id: string) {
+  async function removeParticipant(id: string): Promise<void> {
     const { error } = await supabase.from("projet_participants").delete().eq("id", id);
-    if (error) return toast.error("Ce participant est encore responsable d’une activité.");
+    if (error) {
+      toast.error("Ce participant est encore responsable d’une activité.");
+      return;
+    }
     await queryClient.invalidateQueries({ queryKey: ["project-participants", project.id] });
   }
 
-  async function addActivity(event: React.FormEvent<HTMLFormElement>) {
+  async function addActivity(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (!activity.responsable_id || !String(activity.activite ?? "").trim() || !activity.date_debut || !activity.date_fin) return toast.error("Complétez les informations de l’activité.");
-    if (Number(activity.budget) > remaining) return toast.error("Le budget alloué dépasse le budget restant du projet.");
-    if (String(activity.date_debut) < String(project.date_debut) || String(activity.date_fin) > String(project.date_fin) || String(activity.date_fin) < String(activity.date_debut)) return toast.error("La période de l’activité doit rester dans celle du projet.");
+    if (!activity.responsable_id || !String(activity.activite ?? "").trim() || !activity.date_debut || !activity.date_fin) {
+      toast.error("Complétez les informations de l’activité.");
+      return;
+    }
+    if (Number(activity.budget) > remaining) {
+      toast.error("Le budget alloué dépasse le budget restant du projet.");
+      return;
+    }
+    if (String(activity.date_debut) < String(project.date_debut) || String(activity.date_fin) > String(project.date_fin) || String(activity.date_fin) < String(activity.date_debut)) {
+      toast.error("La période de l’activité doit rester dans celle du projet.");
+      return;
+    }
     try {
       let engagementPath: string | null = null;
       if (engagement) {
