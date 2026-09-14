@@ -559,61 +559,88 @@ export type Database = {
       }
       employes: {
         Row: {
+          banque: string | null
+          categorie_personnel: string
           cni: string | null
+          contrat_path: string | null
           created_at: string
           date_entree: string | null
           date_sortie: string | null
+          dossier_path: string | null
           email: string | null
           fonction: string | null
           id: string
           legacy_id: string | null
           localite: string | null
           matricule: string | null
+          niveau_etudes: string | null
           nom: string
+          numero_compte: string | null
           prenom: string | null
+          profil: string | null
+          responsable: string | null
           salaire_base: number
           service: string | null
           statut: string
           telephone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          banque?: string | null
+          categorie_personnel?: string
           cni?: string | null
+          contrat_path?: string | null
           created_at?: string
           date_entree?: string | null
           date_sortie?: string | null
+          dossier_path?: string | null
           email?: string | null
           fonction?: string | null
           id?: string
           legacy_id?: string | null
           localite?: string | null
           matricule?: string | null
+          niveau_etudes?: string | null
           nom: string
+          numero_compte?: string | null
           prenom?: string | null
+          profil?: string | null
+          responsable?: string | null
           salaire_base?: number
           service?: string | null
           statut?: string
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          banque?: string | null
+          categorie_personnel?: string
           cni?: string | null
+          contrat_path?: string | null
           created_at?: string
           date_entree?: string | null
           date_sortie?: string | null
+          dossier_path?: string | null
           email?: string | null
           fonction?: string | null
           id?: string
           legacy_id?: string | null
           localite?: string | null
           matricule?: string | null
+          niveau_etudes?: string | null
           nom?: string
+          numero_compte?: string | null
           prenom?: string | null
+          profil?: string | null
+          responsable?: string | null
           salaire_base?: number
           service?: string | null
           statut?: string
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
