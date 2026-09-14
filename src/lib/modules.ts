@@ -721,7 +721,7 @@ export const MODULES: ModuleDef[] = [
       { name: "titre", label: "Contenu de l’archive", type: "text", list: true, required: true },
       { name: "auteur_nom", label: "Auteur", type: "text", list: true, form: false },
       { name: "date_document", label: "Date", type: "date", list: true, form: false },
-      { name: "fichier_path", label: "Fichier d’archive", type: "file", required: true },
+      { name: "fichier_path", label: "Document", type: "file", list: true, required: true },
     ],
   },
   {
@@ -741,7 +741,7 @@ export const MODULES: ModuleDef[] = [
       { name: "titre", label: "Titre du document", type: "text", list: true, required: true },
       { name: "auteur_nom", label: "Auteur", type: "text", list: true, form: false },
       { name: "date_document", label: "Date", type: "date", list: true, form: false },
-      { name: "fichier_path", label: "Fichier de planification", type: "file", required: true },
+      { name: "fichier_path", label: "Document", type: "file", list: true, required: true },
     ],
   },
 ];
